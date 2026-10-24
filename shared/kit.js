@@ -28,6 +28,8 @@ export async function unlock({ motion = false, audio = false } = {}) {
 /** Haptic tick. Uses navigator.vibrate where it exists, else the iOS <input switch> trick (tap-gated). */
 let hapticLabel;
 export function haptic(pattern = 10) {
+  // Both paths need prior user activation; skip silently before the first tap.
+  if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
   if (navigator.vibrate) { navigator.vibrate(pattern); return; }
   try {
     if (!hapticLabel) {
