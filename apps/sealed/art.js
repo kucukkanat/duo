@@ -329,7 +329,7 @@ export const THEMES = {
     layers: () => [
       { svg: night(), x: 50, w: 76, d: 0 },
       { svg: door(), x: 50, w: 30, d: 1, tap: 'keyhole' },
-      { svg: bushes(), x: 50, w: 100, d: 2 },
+      { svg: bushes(), x: 50, w: 86, d: 2 },
     ],
   },
 };

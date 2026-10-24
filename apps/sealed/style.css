@@ -295,8 +295,8 @@ html.light-ui .duo-back, html.light-ui .duo-fold-toggle { color: #3a2228; backgr
 .spread .note { left: 13%; right: 9%; top: 47%; transform: translateY(-50%); }
 .spread .msg { font-size: calc(7.2 * var(--u)); line-height: 1.25; }
 .spread .sig { font-size: calc(8.6 * var(--u)); }
-.spread .hint { bottom: calc(var(--safe-b) + 84px); }
-.spread .cta { bottom: calc(var(--safe-b) + 20px); }
+.spread .hint { bottom: calc(var(--safe-b) + 104px); }
+.spread .cta { bottom: calc(var(--safe-b) + 36px); }
 .spread .spine { display: block; position: absolute; top: 0; bottom: 0; left: calc(50% - 32px); width: 64px; z-index: 5; pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(60,20,10,.08) 35%, rgba(60,20,10,.3) 49.5%, rgba(255,255,255,.35) 50.5%, rgba(60,20,10,.1) 62%, transparent); }
 .spread.dark .spine { background: linear-gradient(90deg, transparent, rgba(0,0,0,.25) 35%, rgba(0,0,0,.6) 49.5%, rgba(255,255,255,.1) 50.5%, rgba(0,0,0,.2) 62%, transparent); }
