@@ -40,7 +40,7 @@ const sparkle = (cx, cy, r, fill, cls = '') =>
 
 // ───────────────────────── Birthday
 function bunting() {
-  const P0 = [8, 16], P1 = [100, 74], P2 = [192, 16];
+  const P0 = [8, 12], P1 = [100, 58], P2 = [192, 12];
   const B = t => [0, 1].map(k => (1 - t) ** 2 * P0[k] + 2 * (1 - t) * t * P1[k] + t * t * P2[k]);
   const cols = ['#E8577A', '#F5B942', '#5BC0BE', '#8E6BD8', '#F28C5B'];
   let flags = '';
@@ -49,19 +49,19 @@ function bunting() {
     const a = Math.atan2(y2 - y, x2 - x) * 180 / Math.PI;
     flags += `<path ${ed(cols[i % 5])} transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${a.toFixed(1)})" d="M-7.5 0H7.5L0 17Z"/>`;
   }
-  return svg(200, 124, `
-    <rect x="5.5" y="12" width="4" height="112" rx="2" ${ed('#B07A55')}/>
-    <rect x="190.5" y="12" width="4" height="112" rx="2" ${ed('#B07A55')}/>
-    <circle cx="7.5" cy="11" r="4" ${ed('#F5B942')}/><circle cx="192.5" cy="11" r="4" ${ed('#F5B942')}/>
-    <path d="M8 16Q100 74 192 16" fill="none" stroke="#7A4E3A" stroke-width="1.2"/>${flags}`);
+  return svg(200, 86, `
+    <rect x="5.5" y="9" width="4" height="77" rx="2" ${ed('#B07A55')}/>
+    <rect x="190.5" y="9" width="4" height="77" rx="2" ${ed('#B07A55')}/>
+    <circle cx="7.5" cy="8" r="4" ${ed('#F5B942')}/><circle cx="192.5" cy="8" r="4" ${ed('#F5B942')}/>
+    <path d="M8 12Q100 58 192 12" fill="none" stroke="#7A4E3A" stroke-width="1.2"/>${flags}`);
 }
 function balloons() {
   const b = (cx, cy, r, c, bx) => `
-    <path d="M${cx} ${cy + r * 1.2}C${cx - 6} ${cy + r * 1.2 + 25} ${bx + 8} ${170 - 40} ${bx} 172" fill="none" stroke="#9C8A80" stroke-width=".9"/>
+    <path d="M${cx} ${cy + r * 1.2}C${cx - 6} ${cy + r * 1.2 + 25} ${bx + 8} 96 ${bx} 132" fill="none" stroke="#9C8A80" stroke-width=".9"/>
     <ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * 1.18}" ${ed(c)}/>
     <ellipse cx="${cx - r * .38}" cy="${cy - r * .45}" rx="${r * .22}" ry="${r * .34}" fill="#fff" opacity=".45" transform="rotate(-25 ${cx - r * .38} ${cy - r * .45})"/>
     <path d="M${cx - 3} ${cy + r * 1.2 + 4}L${cx} ${cy + r * 1.16}L${cx + 3} ${cy + r * 1.2 + 4}Z" ${ed(c, .8)}/>`;
-  return svg(200, 172, b(26, 34, 17, '#E8577A', 38) + b(52, 60, 15, '#5BC0BE', 40) + b(17, 82, 13, '#F5B942', 36) +
+  return svg(200, 132, b(26, 34, 17, '#E8577A', 38) + b(52, 60, 15, '#5BC0BE', 40) + b(17, 82, 13, '#F5B942', 36) +
     b(174, 30, 17, '#8E6BD8', 160) + b(150, 58, 15, '#F5B942', 162) + b(184, 80, 13, '#E8577A', 164));
 }
 function drips(x0, x1, y, fill, seed) {
@@ -125,7 +125,7 @@ function bigHeart() {
   return svg(200, 194, `
     <rect x="92" y="150" width="16" height="44" rx="2" ${ed('#B51C33')}/>
     ${heart(100, 120, 172, '#C81D3A', 0, 'beat')}${heart(100, 113, 130, '#EF4B63')}${heart(100, 106, 90, '#FF8FA0')}${heart(100, 99, 50, '#FFD0D7')}
-    ${heart(100, 99, 50, '#FFD0D7')}`);
+`);
 }
 function sideHearts() {
   const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="7" ry="3" ${ed('#5AA469', .8)} transform="rotate(${r} ${x} ${y})"/>`;
@@ -284,7 +284,7 @@ export const THEMES = {
     h: 'You have my heart', m: 'Every ordinary day is better with you in it. This is your reminder.',
     layers: () => [
       { svg: bigHeart(), x: 50, w: 56, d: 0, tap: 'heart' },
-      { svg: sideHearts(), x: 50, w: 92, d: 1, tap: 'heart' },
+      { svg: sideHearts(), x: 50, w: 86, d: 1, tap: 'heart' },
       { svg: grassHearts(), x: 50, w: 96, d: 2 },
     ],
   },
@@ -305,7 +305,7 @@ export const THEMES = {
     liner: 'neon', dark: true,
     h: "You're invited!", m: 'Saturday, 9pm till late. Dress code: sparkle. Bring your best moves.',
     layers: () => [
-      { svg: skyline(11, 150, '#3A2A6E', .35, '#2A1D55', 60, 140, ['#FFD36B', '#FFE9A8']), x: 50, w: 100, d: 0, tap: 'firework' },
+      { svg: skyline(11, 112, '#3A2A6E', .35, '#2A1D55', 46, 108, ['#FFD36B', '#FFE9A8']), x: 50, w: 100, d: 0, tap: 'firework' },
       { svg: skyline(23, 96, '#170C33', .3, '#120828', 26, 86, ['#FF4FD8', '#3EF0FF', '#FFD36B']), x: 50, w: 100, d: 1, tap: 'firework' },
       { svg: marquee(), x: 50, w: 54, d: 2, tap: 'firework' },
     ],
@@ -316,7 +316,7 @@ export const THEMES = {
     liner: 'botanical',
     h: 'Thank you', m: 'For showing up, for the kindness, for all the little things you never had to do.',
     layers: () => [
-      { svg: leaves(), x: 50, w: 84, d: 0 },
+      { svg: leaves(), x: 50, w: 68, d: 0 },
       { svg: bouquet(), x: 50, w: 56, d: 1, tap: 'petals' },
       { svg: pots(), x: 50, w: 96, d: 2, tap: 'petals' },
     ],
@@ -327,7 +327,7 @@ export const THEMES = {
     liner: 'stars', dark: true,
     h: 'Just between us', m: "Some things are only for you. Read this once, smile, and keep it in your pocket.",
     layers: () => [
-      { svg: night(), x: 50, w: 100, d: 0 },
+      { svg: night(), x: 50, w: 76, d: 0 },
       { svg: door(), x: 50, w: 30, d: 1, tap: 'keyhole' },
       { svg: bushes(), x: 50, w: 100, d: 2 },
     ],

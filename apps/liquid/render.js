@@ -87,6 +87,9 @@ vec3 background(vec2 p, vec2 sp){
 }
 
 float field(vec2 uv){ return texture(uField, uv).a; }
+float hgt(vec2 uv){ float w = textureLod(uField, uv, 1.0).a; return 1.0 - exp(-max(w - uThresh*0.55, 0.0) * 0.9); }
+float vnoise(vec2 p){ vec2 i = floor(p), f = fract(p); f = f*f*(3.0-2.0*f);
+  return mix(mix(hash(i), hash(i+vec2(1,0)), f.x), mix(hash(i+vec2(0,1)), hash(i+vec2(1,1)), f.x), f.y); }
 
 void main(){
   vec2 sp = vec2(vUv.x, 1.0 - vUv.y);
@@ -98,15 +101,14 @@ void main(){
   vec3 base = F.rgb / max(w, 1e-4);
   float spd = texture(uVel, vUv).r / max(w, 1e-4);
 
-  // normal from density gradient
-  vec2 e = uTexel * 1.5;
-  float wl = field(vUv - vec2(e.x,0.0)), wr = field(vUv + vec2(e.x,0.0));
-  float wd = field(vUv - vec2(0.0,e.y)), wu = field(vUv + vec2(0.0,e.y));
-  vec2 grad = vec2(wr - wl, -(wu - wd));          // screen space, y down
-  float hk = uDensK;
-  vec3 N = normalize(vec3(-grad * hk, 1.0));
-  float mask = smoothstep(uThresh - 0.06, uThresh + 0.06, w);
-  float thick = clamp((w - uThresh) / 2.5, 0.0, 1.0);
+  // normal from a smoothed height field (saturating, so the bulk is flat and edges roll off)
+  vec2 e = uTexel * 2.0;
+  float hl = hgt(vUv - vec2(e.x,0.0)), hr = hgt(vUv + vec2(e.x,0.0));
+  float hd = hgt(vUv - vec2(0.0,e.y)), hu = hgt(vUv + vec2(0.0,e.y));
+  vec2 grad = vec2(hr - hl, -(hu - hd));          // screen space, y down
+  vec3 N = normalize(vec3(-grad * uDensK, 1.0));
+  float mask = smoothstep(uThresh - 0.08, uThresh + 0.08, w);
+  float thick = clamp((w - uThresh) / 3.0, 0.0, 1.0);
 
   // refraction of the background
   vec3 refr = background(p + N.xy * 22.0 * (0.6 + thick), sp + N.xy * 0.02);
@@ -124,13 +126,19 @@ void main(){
   // speed tint: slow -> crust, fast -> hot
   float heat = smoothstep(0.02, 0.35, spd);
   vec3 body = mix(base, uHot, heat * 0.55);
-  body = mix(body, uCrust, uMat.w * (1.0 - smoothstep(0.0, 0.12, spd)) * (0.35 + 0.65*thick));
+  // crust: cracked skin pattern where the liquid is slow
+  float cr = vnoise(p * 0.03 + vec2(uFx.z * 0.05, 0.0)) * 0.65 + vnoise(p * 0.085 - uFx.z * 0.03) * 0.35;
+  float plate = smoothstep(0.015, 0.06, abs(cr - 0.5));           // 0 on the glowing cracks
+  float slow = 1.0 - smoothstep(0.02, 0.16, spd);
+  float crustAmt = uMat.w * slow * plate * smoothstep(0.05, 0.5, thick);
+  body = mix(body, uCrust, crustAmt * 0.75);
+  body += uHot * uMat.w * slow * (1.0 - plate) * 0.6 * smoothstep(0.05, 0.4, thick);
 
   vec3 iri = 0.5 + 0.5*cos(6.2832*(vec3(0.0,0.33,0.67) + fres*1.3 + thick*0.6 + uFx.z*0.04));
 
   vec3 liquid = mix(refr, refr * body * 1.6 + body * 0.55, 0.82);
   liquid *= 0.75 + 0.35 * ndl;
-  liquid += body * (0.25 + 0.6*heat) * uMat.x * 0.6;              // emissive glow
+  liquid += body * (0.2 + 0.5*thick + 0.6*heat) * uMat.x * 0.6 * (1.0 - crustAmt*0.7);  // emissive glow
   liquid += iri * fres * uMat.y;
   liquid += mix(body, vec3(1.0), 0.5) * fres * 0.55;              // rim
   // chrome: reflect a studio environment
@@ -204,7 +212,7 @@ out vec3 vCol; out float vLife;
 void main(){
   vec2 n = (aPos - uCam.xy) / (uCam.zw - uCam.xy);
   gl_Position = vec4(n.x*2.0-1.0, 1.0-n.y*2.0, 0.0, 1.0);
-  gl_PointSize = uScale * (2.0 + 4.0*aLife);
+  gl_PointSize = uScale * (2.5 + 7.0*aLife);
   vCol = aCol; vLife = aLife;
 }`;
 const SPARK_FS = `#version 300 es
@@ -213,8 +221,9 @@ in vec3 vCol; in float vLife; out vec4 o;
 void main(){
   vec2 c = gl_PointCoord*2.0-1.0; float r = dot(c,c);
   if (r > 1.0) discard;
+  float core = smoothstep(0.35, 0.0, r);
   float a = (1.0 - r); a *= a;
-  o = vec4((vCol + 0.6) * a * vLife * 0.9, 1.0);
+  o = vec4((vCol * a * 0.9 + vec3(1.0) * core * 0.8) * vLife, 1.0);
 }`;
 
 function compile(gl, type, src) {
@@ -342,8 +351,8 @@ export class GLRenderer {
     gl.uniform4f(u.uWall2, w.on ? 1 : 0, w.axis, st.wallGrow, Number.isFinite(f.limit) ? f.limit : 1e9);
     gl.uniform3f(u.uFx, st.flash, st.reveal, st.time);
     gl.uniform2f(u.uLight, st.light[0], st.light[1]);
-    gl.uniform1f(u.uThresh, 0.75 * lp);
-    gl.uniform1f(u.uDensK, 2.2 / lp);
+    gl.uniform1f(u.uThresh, 1.0 * lp);
+    gl.uniform1f(u.uDensK, 7.0);
     gl.uniform3fv(u.uBg0, th.bg0); gl.uniform3fv(u.uBg1, th.bg1); gl.uniform3fv(u.uGlowC, th.glowC);
     gl.uniform3fv(u.uHot, th.hotC); gl.uniform3fv(u.uCrust, th.crustC);
     gl.uniform4f(u.uMat, th.glow, th.iri, th.metal, th.crust);

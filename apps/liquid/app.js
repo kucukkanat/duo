@@ -11,6 +11,7 @@ const easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
 const easeInOut = t => { t = clamp(t, 0, 1); return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
 const easeOutBack = t => { t = clamp(t, 0, 1); const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NOADAPT = /[?&]noadapt/.test(location.search);
 const coarse = matchMedia('(pointer: coarse)').matches;
 
 // ---------------------------------------------------------------- themes (see DESIGN.md)
@@ -49,7 +50,7 @@ const F = new Fluid(MAX);
 const h = F.h;
 const G = 0.011 * h;            // gravity, px / substep^2
 const GAP = 2.1 * h;
-const splatR = 0.95 * h;
+const splatR = 1.2 * h;
 
 function themeColor(x, y, out, th = theme) {
   const t = 0.5 + 0.5 * Math.sin(x * 0.011 + y * 0.007 + 1.3) * Math.cos(y * 0.013 - x * 0.004);
@@ -78,6 +79,7 @@ let mode = 'closed';         // closed | unfolding | open | folding
 let anim = null;             // active transition
 const st = { cam: [0, 0, W, H], wallGrow: 1, flash: 0, reveal: 1, time: 0, light: [-0.3, -0.95], theme, splatR };
 let camAnim = null;
+let simT = 0;                 // simulation clock (ms); transitions run on it so slow frames don't skip the show
 let shake = 0;
 let gOverride = null;        // {x,y,w}
 
@@ -161,9 +163,9 @@ function beginUnfold(prev, state) {
   const camFrom = remap(oW, oH, region);
   setWall(ax, W, H, 0);
   st.wallGrow = 0; st.reveal = 0.08;
-  if (!reduced) camAnim = { from: camFrom, to: [0, 0, W, H], t0: performance.now(), dur: 650 };
+  if (!reduced) camAnim = { from: camFrom, to: [0, 0, W, H], t0: simT, dur: 650 };
   st.cam = reduced ? [0, 0, W, H] : camFrom.slice();
-  anim = { kind: 'unfold', t0: performance.now(), burst: false };
+  anim = { kind: 'unfold', t0: simT, burst: false };
   mode = 'unfolding';
   hideHint();
 }
@@ -207,8 +209,8 @@ function beginFold(prev, state) {
   Object.assign(F.wall, { on: true, axis: ax, pos: ax ? H : W, gapC, gapHalf: GAP });
   F.limit = ax ? 2 * H : 2 * W;
   st.cam = reduced ? [0, 0, W, H] : camFrom.slice();
-  if (!reduced) camAnim = { from: camFrom, to: [0, 0, W, H], t0: performance.now(), dur: 700 };
-  anim = { kind: 'fold', t0: performance.now(), from: F.limit, to: (ax ? H : W) + 3.5 + 0.4 * h };
+  if (!reduced) camAnim = { from: camFrom, to: [0, 0, W, H], t0: simT, dur: 700 };
+  anim = { kind: 'fold', t0: simT, from: F.limit, to: (ax ? H : W) + 3.5 + 0.4 * h };
   gOverride = { x: ax ? 0 : -1.4, y: ax ? -1.4 : 0, w: 0.8 };
   mode = 'folding';
   if (sfx) { sfx.whoosh(-1, 1.0, 0.45); for (let i = 0; i < 5; i++) sfx.glug(0.7, 0.2 + i * 0.12); }
@@ -499,7 +501,7 @@ function frame(now) {
   emaDelta += (dt - emaDelta) * 0.05;
   st.time = now / 1000;
 
-  updateTransition(now);
+  updateTransition(simT);
   // gravity
   let [ux, uy] = userGravity();
   if (gOverride) { ux = lerp(ux, gOverride.x, gOverride.w); uy = lerp(uy, gOverride.y, gOverride.w); }
@@ -514,6 +516,7 @@ function frame(now) {
   acc -= steps * SUB; if (acc > SUB * 2) acc = 0;
   F.crossings = 0;
   for (let s = 0; s < steps; s++) F.step(gx, gy, ptr);
+  simT += steps * SUB;
   if (ptr.active) { ptr.vx *= 0.85; ptr.vy *= 0.85; }
   if (sfx && F.wall.on && mode !== 'folding') sfx.flow(F.crossings / Math.max(1, steps) * 0.5);
   updateSparks(dt / 1000, ux * 900, uy * 900);
@@ -543,7 +546,7 @@ function frame(now) {
 }
 
 function adapt(now) {
-  if (now - lastAdapt < 1400 || mode === 'unfolding' || mode === 'folding') return;
+  if (NOADAPT || now - lastAdapt < 1400 || mode === 'unfolding' || mode === 'folding') return;
   if (emaDelta > 20 || emaWork > 14) {
     lastAdapt = now;
     if (F.n > budget * 0.55 && F.n > 900) {
@@ -557,7 +560,7 @@ function adapt(now) {
 window.__liquid = {
   get n() { return F.n; }, get emaDelta() { return emaDelta; }, get emaWork() { return emaWork; },
   get mode() { return mode; }, get budget() { return budget; }, get renderQ() { return renderQ; },
-  get gl() { return isGL; }, get h() { return h; }, F, st,
+  get gl() { return isGL; }, get simT() { return simT; }, get h() { return h; }, F, st,
   setGravity(a) { gAngle = a; },
 };
 

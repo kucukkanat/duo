@@ -86,7 +86,7 @@ function targetLayout() {
   const vert = two ? s.crease === 'horizontal' : ah >= aw;
   let theta, L, Wd;
   if (vert) { theta = 0; L = ah; Wd = aw; } else { theta = Math.PI / 2; L = aw; Wd = ah; }
-  if (two) { Wd = Math.min(Wd, L * 1.5); L = Math.min(L, Wd * 1.1); }
+  if (two) { Wd = Math.min(Wd, L * 1.8); L = Math.min(L, Wd * 1.1); }
   else { Wd = Math.min(Wd, L * 0.72); L = Math.min(L, Wd * 2.15); }
   return { cx: l + aw / 2, cy: t + ah / 2, Wd, L, theta, zoom: 1 };
 }
@@ -122,7 +122,7 @@ function startMorph(to, kind) {
   G.morph = { from, to, t: 0, dur, kind, f: dur / base, fired: {}, prevMode: G.mode };
   normalize();
   puck.trail.length = 0;
-  pointers.clear(); bot.tu = top.tu = null;
+  pointers.clear(); bot.tu = top.tu = bot.tv = top.tv = null;
   if (kind === 'join') {
     G.two = true; G.slam = false;
     sfx.whoosh(dur * 0.45, true);
@@ -186,13 +186,13 @@ function morphStep(dt) {
   const A = M.from, B = M.to;
   cur.cx = lerp(A.cx, B.cx, g); cur.cy = lerp(A.cy, B.cy, g);
   cur.Wd = lerp(A.Wd, B.Wd, g); cur.L = lerp(A.L, B.L, g);
-  cur.theta = lerp(A.theta, B.theta, g); cur.zoom = lerp(A.zoom, B.zoom, g);
+  cur.theta = lerp(A.theta, B.theta, g); cur.zoom = Math.min(lerp(A.zoom, B.zoom, g), fitZoom(cur));
   computeK(); denormalize();
   if (t >= M.dur) {
     const kind = M.kind, prev = M.prevMode;
     endMorphFx();
     if (kind === 'join' && ['play', 'goal', 'countdown'].includes(prev)) {
-      faceoff('center'); startCountdown([[0, 'READY'], [0.8, 'GO']]);
+      placeHome(); faceoff('center'); startCountdown([[0.35, 'READY'], [1.1, 'GO']]);
     }
     if (kind === 'leave' && prev === 'play') G.timeScale = 0.25;
     layoutPanels();
@@ -203,6 +203,7 @@ function morphStep(dt) {
 function placeHome() {
   bot.u = k.W / 2; bot.v = k.L - k.R * 1.7;
   top.u = k.W / 2; top.v = k.R * 1.7;
+  bot.tu = bot.tv = top.tu = top.tv = null;
 }
 function faceoff(where) {
   puck.u = k.W / 2; puck.vu = puck.vv = 0; puck.scoring = false; puck.hidden = false; puck.trail.length = 0;
@@ -309,7 +310,7 @@ function aiStep(p, dt, d) {
 // ---------- physics ----------
 function simulate(dt) {
   const ends = pads.map(p => {
-    if (human(p)) return clampPad(p, p.tu ?? p.u, p.tv ?? p.v);
+    if (human(p)) return p.tu == null ? clampPad(p, p.u, p.v) : clampPad(p, p.tu, p.tv);
     const d = G.mode === 'demo' ? DIFFS[p.side === 'bottom' ? 0 : 1] : DIFFS[G.diff];
     return clampPad(p, ...aiStep(p, dt, d));
   });
@@ -695,14 +696,17 @@ function scene(time) {
   // trail
   if (puck.trail.length > 1 && !puck.hidden) {
     const tc = puck.last === 'bottom' ? C.p1 : topC;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
     const n = puck.trail.length;
-    for (let i = 1; i < n; i++) {
-      const q = i / n, [a, b] = puck.trail[i - 1], [c, d] = puck.trail[i];
-      ctx.strokeStyle = tc;
-      ctx.globalAlpha = q * q * 0.35; ctx.lineWidth = pr * 2 * q * 1.3;
-      ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke();
-      ctx.globalAlpha = q * q * 0.6; ctx.lineWidth = pr * 0.7 * q; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+    // tapered ribbon: outer coloured haze, then a hot white core
+    for (const [col, wMul, aMul] of [[tc, 1.7, 0.22], [tc, 0.9, 0.35], ['#ffffff', 0.32, 0.55]]) {
+      ctx.strokeStyle = col;
+      for (let i = 1; i < n; i++) {
+        const q = i / n, [a, b] = puck.trail[i - 1], [c, d] = puck.trail[i];
+        if (Math.hypot(c - a, d - b) < 0.5) continue;
+        ctx.globalAlpha = q * q * aMul; ctx.lineWidth = pr * wMul * q;
+        ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke();
+      }
     }
     ctx.restore();
   }

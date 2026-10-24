@@ -76,20 +76,22 @@ export class Seal {
     const crackD = this.lines.map(L => 'M' + L.pts.slice(0, 7).map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L'));
 
     const L = esc(letter || '');
-    this.host.innerHTML = `
-<svg class="seal-svg" viewBox="-80 -80 160 160" overflow="visible" aria-hidden="true">
+    // The wax body is rasterised once as an SVG image (its lighting filters are costly to re-run per frame);
+    // shards are clipped copies of that image, so cracking and flying is cheap.
+    const body_svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-80 -80 160 160" width="480" height="480">
  <defs>
-  <radialGradient id="${u}g" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="${hi}"/><stop offset=".42" stop-color="${color}"/><stop offset="1" stop-color="${lo}"/></radialGradient>
-  <radialGradient id="${u}o" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="${shade(color, .15)}"/><stop offset="1" stop-color="${shade(color, -.55)}"/></radialGradient>
-  <radialGradient id="${u}p" cx=".62" cy=".66" r=".7"><stop offset="0" stop-color="${shade(color, .1)}"/><stop offset=".7" stop-color="${mid}"/><stop offset="1" stop-color="${shade(color, -.3)}"/></radialGradient>
-  <radialGradient id="${u}s" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-  <filter id="${u}bev" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+  <radialGradient id="g" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="${hi}"/><stop offset=".42" stop-color="${color}"/><stop offset="1" stop-color="${lo}"/></radialGradient>
+  <radialGradient id="o" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="${shade(color, .15)}"/><stop offset="1" stop-color="${shade(color, -.55)}"/></radialGradient>
+  <radialGradient id="p" cx=".62" cy=".66" r=".7"><stop offset="0" stop-color="${shade(color, .1)}"/><stop offset=".7" stop-color="${mid}"/><stop offset="1" stop-color="${shade(color, -.3)}"/></radialGradient>
+  <radialGradient id="s" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset=".4" stop-color="#fff" stop-opacity=".18"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="bev" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
    <feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="b"/>
    <feSpecularLighting in="b" surfaceScale="5" specularConstant=".85" specularExponent="18" lighting-color="#fff" result="s"><feDistantLight azimuth="225" elevation="38"/></feSpecularLighting>
    <feComposite in="s" in2="SourceAlpha" operator="in" result="sp"/>
    <feComposite in="SourceGraphic" in2="sp" operator="arithmetic" k1="0" k2="1" k3=".5" k4="0"/>
   </filter>
-  <filter id="${u}in" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+  <filter id="tx" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${seed % 97}"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .35 0"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+  <filter id="in" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
    <feGaussianBlur in="SourceAlpha" stdDeviation="1.6" result="b"/>
    <feOffset in="b" dx="2.2" dy="2.6" result="o1"/>
    <feComposite in="SourceAlpha" in2="o1" operator="arithmetic" k2="1" k3="-1" result="d1"/>
@@ -99,39 +101,46 @@ export class Seal {
    <feFlood flood-color="#fff" flood-opacity=".42"/><feComposite in2="d2" operator="in" result="hl"/>
    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="sh"/><feMergeNode in="hl"/></feMerge>
   </filter>
-  <clipPath id="${u}cb"><path d="${body}"/></clipPath>
-  ${wedges.map((w, i) => `<clipPath id="${u}c${i}"><path d="${w.d}"/></clipPath>`).join('')}
-  <g id="${u}body">
-   <g filter="url(#${u}bev)">
-    <path d="${outer}" fill="url(#${u}o)"/>
-    <path d="${body}" fill="url(#${u}g)"/>
-    <circle cx="1" cy="-.5" r="35" fill="url(#${u}p)" filter="url(#${u}in)"/>
-   </g>
-   <circle cx="1" cy="-.5" r="30.5" fill="none" stroke="${shade(color, -.45)}" stroke-width="1.1" stroke-dasharray="1.2 2.2" opacity=".75"/>
-   <circle cx="1" cy="-.5" r="28" fill="none" stroke="${shade(color, .25)}" stroke-width=".5" opacity=".5"/>
-   <text x="1" y="-.5" dy=".35em" text-anchor="middle" font-family="Fraunces, 'Iowan Old Style', Georgia, serif" font-weight="700" font-style="italic" font-size="38" fill="${shade(color, -.22)}" filter="url(#${u}in)">${L}</text>
-   <g clip-path="url(#${u}cb)"><g class="gloss"><ellipse cx="-20" cy="-24" rx="26" ry="15" fill="url(#${u}s)" transform="rotate(-35 -20 -24)"/><ellipse cx="-27" cy="-30" rx="5" ry="2.6" fill="#fff" opacity=".7" transform="rotate(-35 -27 -30)"/></g></g>
-  </g>
+  <clipPath id="cb"><path d="${body}"/></clipPath>
  </defs>
- <g class="shards">${wedges.map((w, i) => `<g class="shard"><use href="#${u}body" clip-path="url(#${u}c${i})"/></g>`).join('')}</g>
- <use class="whole" href="#${u}body"/>
+ <g filter="url(#bev)">
+  <path d="${outer}" fill="url(#o)"/>
+  <path d="${body}" fill="url(#g)"/>
+  <circle cx="1" cy="-.5" r="35" fill="url(#p)" filter="url(#in)"/>
+ </g>
+ <path d="${outer}" fill="#000" filter="url(#tx)" opacity=".5"/>
+ <circle cx="1" cy="-.5" r="30.5" fill="none" stroke="${shade(color, -.45)}" stroke-width="1.1" stroke-dasharray="1.2 2.2" opacity=".75"/>
+ <circle cx="1" cy="-.5" r="28" fill="none" stroke="${shade(color, .25)}" stroke-width=".5" opacity=".5"/>
+ <text x="1" y="-.5" dy=".36em" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-style="italic" font-size="38" fill="${shade(color, -.22)}" filter="url(#in)">${L}</text>
+ <g clip-path="url(#cb)"><ellipse cx="-20" cy="-26" rx="24" ry="12" fill="url(#s)" transform="rotate(-35 -20 -26)"/></g>
+</svg>`;
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(body_svg);
+    const img = extra => `<image href="${url}" x="-80" y="-80" width="160" height="160" ${extra}/>`;
+    this.host.innerHTML = `
+<svg class="seal-svg" viewBox="-80 -80 160 160" overflow="visible" aria-hidden="true">
+ <defs>${wedges.map((w, i) => `<clipPath id="${u}c${i}"><path d="${w.d}"/></clipPath>`).join('')}</defs>
+ <g class="shards" style="display:none">${wedges.map((w, i) => `<g class="shard">${img(`clip-path="url(#${u}c${i})"`)}</g>`).join('')}</g>
+ <g class="whole">${img('')}</g>
  <g class="cracks" fill="none" stroke-linecap="round" stroke-linejoin="round">
   ${crackD.map(d => `<path d="${d}" pathLength="1" stroke="${shade(color, -.72)}" stroke-width="1.7" stroke-dasharray="1 1" stroke-dashoffset="1"/><path d="${d}" transform="translate(.9 .9)" pathLength="1" stroke="${hi}" stroke-width=".6" opacity=".7" stroke-dasharray="1 1" stroke-dashoffset="1"/>`).join('')}
  </g>
-</svg>`;
+</svg><div class="spec"><i></i></div>`;
     this.svg = this.host.firstElementChild;
     this.shards = [...this.svg.querySelectorAll('.shard')];
     this.whole = this.svg.querySelector('.whole');
     this.cracks = [...this.svg.querySelectorAll('.cracks path')];
-    this.gloss = this.svg.querySelector('.gloss');
+    this.shardG = this.svg.querySelector('.shards');
+    this.gloss = this.host.querySelector('.spec i');
   }
 
-  setGloss(x, y) { this.gloss.setAttribute('transform', `translate(${(x * 14).toFixed(2)} ${(y * 14).toFixed(2)})`); }
+  setGloss(x, y) { this.gloss.style.transform = `translate(${(x * 22).toFixed(1)}%, ${(y * 22).toFixed(1)}%)`; }
 
   /** 0..1 progressive crack while dragging. dir = drag direction in radians (cracks race toward it first). */
   setCrack(p, dir = null) {
     this.crack = p;
     this.whole.style.display = p > .015 ? 'none' : '';
+    this.shardG.style.display = p > .015 ? '' : 'none';
+    this.host.classList.toggle('cracked', p > .015);
     this.cracks.forEach((c, k) => {
       const i = k >> 1;
       let bias = 0;
@@ -199,7 +208,7 @@ export class Seal {
         });
         this.cracks.forEach(c => c.setAttribute('stroke-dashoffset', String(e)));
         if (t < 1) requestAnimationFrame(step);
-        else { this.broken = false; this.crack = 0; this.whole.style.display = ''; res(); }
+        else { this.broken = false; this.setCrack(0); res(); }
       };
       requestAnimationFrame(step);
     });
