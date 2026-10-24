@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en" data-fold="closed">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#3a0610">
+<title>Fold Booth · Duo Lab</title>
+<meta property="og:title" content="Fold Booth: a retro photobooth that develops when you unfold">
+<meta property="og:description" content="Shoot 4 frames on the cover screen, unfold to develop your photostrip and meet your Mirror Twins: Lefty and Righty.">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,500;1,700&display=swap">
+<link rel="stylesheet" href="../../shared/duo.css">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body data-mode="cover">
+<main id="booth">
+  <!-- Camera page: the whole cover screen when closed, the left page when unfolded -->
+  <section class="page cam-page" id="camPage">
+    <div class="marquee" aria-hidden="true"><span>FOLD</span><b>✦</b><span>BOOTH</span></div>
+    <div class="bezel">
+      <div class="viewfinder" id="vf">
+        <canvas id="live" aria-label="Camera viewfinder"></canvas>
+        <div class="vf-glass"></div>
+        <div class="swag l"></div><div class="swag r"></div>
+        <div class="axis" id="axis"><i></i><span>drag to your nose</span></div>
+        <div class="vf-tag" id="vfTag">● LIVE</div>
+        <div class="countdown" id="countdown" aria-live="assertive"></div>
+        <div class="hint" id="hint">Unfold to develop <b>✦</b></div>
+      </div>
+    </div>
+    <div class="styles" id="styles" role="radiogroup" aria-label="Film style">
+      <button role="radio" data-style="bw"><i class="sw sw-bw"></i><span>Classic B&amp;W</span></button>
+      <button role="radio" data-style="warm"><i class="sw sw-warm"></i><span>Warm Film</span></button>
+      <button role="radio" data-style="comic"><i class="sw sw-comic"></i><span>Comic</span></button>
+      <button role="radio" data-style="holo"><i class="sw sw-holo"></i><span>Holo</span></button>
+    </div>
+    <div class="deck">
+      <button class="thumb" id="thumb" aria-label="Open last strip" disabled><img alt=""></button>
+      <button class="shutter" id="shutter" aria-label="Take 4 photos"><span></span></button>
+      <div class="bulbs" id="bulbs" aria-label="Frames taken"><i></i><i></i><i></i><i></i></div>
+    </div>
+  </section>
+
+  <!-- Live Mirror Twins preview (open, nothing shot yet) -->
+  <section class="page twin-page paper" id="twinPage">
+    <header class="kicker"><span>Nº 4 · Live</span><span>Mirror Twins</span></header>
+    <div class="twin-live">
+      <figure><canvas id="liveL"></canvas><figcaption>LEFTY</figcaption></figure>
+      <figure><canvas id="liveR"></canvas><figcaption>RIGHTY</figcaption></figure>
+    </div>
+    <p class="question">which twin are you?</p>
+    <p class="tip">Hit the shutter to print your strip</p>
+  </section>
+
+  <!-- Developed strip (left page when open) -->
+  <section class="page strip-page" id="stripPage">
+    <div class="slot" aria-hidden="true"></div>
+    <div class="strip-wrap" id="stripWrap">
+      <div class="strip-curl" id="stripCurl">
+        <img id="stripImg" alt="Your 4-frame photostrip">
+        <div class="gloss"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reveal: editorial Mirror Twins spread -->
+  <section class="page reveal-page paper" id="revealPage">
+    <header class="kicker"><span>Issue Nº 4</span><span>Mirror Twins</span></header>
+    <div class="twins">
+      <figure class="twin" data-twin="Lefty"><canvas id="twinL"></canvas><figcaption>LEFTY</figcaption><em class="stamp">IT'S ME</em></figure>
+      <figure class="twin" data-twin="Righty"><canvas id="twinR"></canvas><figcaption>RIGHTY</figcaption><em class="stamp">IT'S ME</em></figure>
+    </div>
+    <p class="question">which twin are you?</p>
+    <label class="axis-ctl"><span>mirror line</span><input type="range" id="axisRange" min="30" max="70" step="0.5" value="50" aria-label="Mirror line position"></label>
+    <div class="actions">
+      <button class="btn brass" id="share">Share poster ✦</button>
+      <button class="btn ghost" id="saveStrip">Save strip</button>
+      <button class="btn ghost" id="retake">Retake</button>
+    </div>
+  </section>
+  <div class="crease-flare" id="flare" aria-hidden="true"></div>
+</main>
+
+<div class="stage" id="stage">
+  <div class="drape l"></div><div class="drape r"></div>
+  <div class="valance"></div>
+  <button class="sign" id="enter">
+    <span class="bulbs-ring"></span>
+    <small>Duo Lab presents</small>
+    <strong>FOLD BOOTH</strong>
+    <em>4 poses · 1 strip · 2 twins</em>
+    <span class="enter-cta">Step inside ✦</span>
+  </button>
+</div>
+<div class="flash" id="flash"></div>
+<div class="grain-overlay" aria-hidden="true"></div>
+<video id="video" playsinline muted autoplay></video>
+</body>
+</html>

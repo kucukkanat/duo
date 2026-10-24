@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en" data-fold="closed">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#03040a">
+<title>Hinge Hockey · Duo Lab</title>
+<meta name="description" content="Neon air hockey. Beat the AI on the cover screen, unfold and a friend's paddle drops in across the crease.">
+<meta property="og:title" content="Hinge Hockey: unfold and a friend joins face to face">
+<meta property="og:description" content="Neon air hockey vs the AI on the cover screen. Unfold the phone and the rink re-forms for two players across the crease. First to 7.">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Teko:wght@500;600&display=swap">
+<link rel="stylesheet" href="../../shared/duo.css">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<canvas id="rink" aria-label="Air hockey rink"></canvas>
+
+<section class="wrap" id="menu">
+  <div class="panel">
+    <h1 class="logo"><span>HINGE</span><span>HOCKEY</span></h1>
+    <div class="challenge" id="chal" hidden></div>
+    <p class="hint" id="modeHint">You vs the AI · first to 7</p>
+    <div class="diff" id="diff" role="radiogroup" aria-label="AI difficulty">
+      <button type="button" data-d="0" role="radio">Rookie</button>
+      <button type="button" data-d="1" role="radio">Pro</button>
+      <button type="button" data-d="2" role="radio">Insane</button>
+    </div>
+    <label class="name">Your name <input id="name" maxlength="12" autocomplete="nickname" spellcheck="false"></label>
+    <button class="duo-btn go" id="play" type="button">Face off</button>
+    <p class="tip" id="tip">Unfold mid-game and a friend's paddle drops in.</p>
+  </div>
+</section>
+
+<section class="wrap" id="over" hidden>
+  <div class="panel">
+    <div class="result" id="result">YOU WIN</div>
+    <div class="final" id="final">7–3 · 2:14</div>
+    <div class="challenge" id="beat" hidden></div>
+    <label class="name">Your name <input id="name2" maxlength="12" autocomplete="nickname" spellcheck="false"></label>
+    <div class="row">
+      <button class="duo-btn go" id="rematch" type="button">Rematch</button>
+      <button class="duo-btn ghost" id="share" type="button">Challenge a friend</button>
+    </div>
+    <button class="link" id="toMenu" type="button">Change difficulty</button>
+  </div>
+</section>
+<div id="safe" aria-hidden="true"></div>
+</body>
+</html>

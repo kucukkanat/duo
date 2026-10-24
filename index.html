@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en" data-fold="closed">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Duo Lab</title>
+<meta name="description" content="Four things your iPhone can do now that it folds. A pocket booklet of experiments for iPhone Duo. Unfold to begin.">
+<meta name="theme-color" content="#121628">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Duo Lab">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Duo Lab">
+<meta property="og:title" content="Duo Lab: four things your iPhone can do now that it folds">
+<meta property="og:description" content="A photo booth, a sealed letter, two-player hockey across the crease and a liquid that spills when you unfold. Built for iPhone Duo, with a simulated fold for every other phone.">
+<meta property="og:image" content="og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Duo Lab: a gold-foiled booklet that opens like your phone">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Duo Lab">
+<meta name="twitter:description" content="Four things your iPhone can do now that it folds.">
+<meta name="twitter:image" content="og.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..700&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="shared/duo.css">
+<link rel="stylesheet" href="hub.css">
+<script type="module" src="hub.js"></script>
+</head>
+<body>
+<p class="desk-caption" aria-hidden="true"><span class="foil-text">Duo Lab</span> is made for iPhone Duo.<br>On a computer, fold the phone with the button below.</p>
+
+<main id="stage" class="stage">
+  <!-- CLOSED: the cover. It is also a one-handed contents list. -->
+  <section id="cover" class="cover" aria-label="Duo Lab cover">
+    <div class="cover-rule" aria-hidden="true"></div>
+    <header class="cover-head">
+      <p class="eyebrow">Vol. I · A field guide for iPhone Duo</p>
+      <h1 class="title"><span class="foil-text">Duo Lab</span></h1>
+      <p class="sub">four things your iPhone can do<br>now that it folds</p>
+    </header>
+
+    <div class="emblem" aria-hidden="true">
+      <div class="spine"></div>
+      <svg class="glyph" viewBox="0 0 64 64" width="56" height="56">
+        <defs><linearGradient id="fg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#f6dc9f"/><stop offset=".5" stop-color="#b7883f"/><stop offset="1" stop-color="#f0cf88"/></linearGradient></defs>
+        <path d="M8 14 L32 19 L32 54 L8 49 Z" fill="none" stroke="url(#fg)" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M32 19 L54 9 L54 44 L32 54 Z" fill="url(#fg)" opacity=".9"/>
+        <path d="M13 26 L27 29 M13 33 L27 36 M13 40 L24 42" stroke="url(#fg)" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <p class="open-me"><span>Open me</span></p>
+      <p class="pull-hint"><span class="arr">‹</span> pull from the spine <span class="arr">›</span></p>
+    </div>
+
+    <nav class="toc" aria-label="Contents">
+      <p class="toc-label">Contents</p>
+      <ol>
+        <li><a href="apps/booth/" style="--tint:#e2583e"><span class="num">01</span><span class="nm">Fold Booth</span><span class="hk">a photo booth that develops on unfold</span><span class="go" aria-hidden="true">›</span></a></li>
+        <li><a href="apps/sealed/" style="--tint:#b3262f"><span class="num">02</span><span class="nm">Sealed</span><span class="hk">a letter that can only be read open</span><span class="go" aria-hidden="true">›</span></a></li>
+        <li><a href="apps/hockey/" style="--tint:#27b59a"><span class="num">03</span><span class="nm">Hinge Hockey</span><span class="hk">a friend drops in across the crease</span><span class="go" aria-hidden="true">›</span></a></li>
+        <li><a href="apps/liquid/" style="--tint:#8b6bff"><span class="num">04</span><span class="nm">Liquid Fold</span><span class="hk">light that spills through the hinge</span><span class="go" aria-hidden="true">›</span></a></li>
+      </ol>
+    </nav>
+
+    <footer class="cover-foot">
+      <button id="unfoldBtn" class="foil-btn" type="button"><span class="ico" aria-hidden="true">◫</span> Unfold</button>
+      <div class="foot-meta">
+        <p class="count" data-count>Not yet unfolded</p>
+        <button class="link-btn" type="button" data-how>How it works</button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- OPEN: the two-page spread. -->
+  <section id="spread" class="spread" aria-label="Duo Lab contents" inert>
+    <button id="foldBtn" class="fold-pill" type="button" hidden>◧ Fold</button>
+    <div class="page left">
+      <header class="running"><span>Duo Lab</span><span>i</span></header>
+      <a class="card" href="apps/booth/" style="--tint:#e2583e">
+        <div class="plate pv-booth" aria-hidden="true">
+          <div class="slot"></div>
+          <div class="strip"><i></i><i></i><i></i><i></i></div>
+          <div class="flash"></div>
+        </div>
+        <div class="meta">
+          <p class="plate-no"><span class="big-num">01</span></p>
+          <h2>Fold Booth</h2>
+          <p class="hook">Four frames on the cover screen.</p>
+          <p class="tease"><b>Unfold</b> the strip slides out of the crease and develops, with your mirror twins.</p>
+        </div>
+      </a>
+      <a class="card" href="apps/sealed/" style="--tint:#b3262f">
+        <div class="plate pv-sealed" aria-hidden="true">
+          <div class="env"><div class="letter"><i></i><i></i><i></i></div><div class="pocket"></div><div class="wax"><span></span><span></span></div></div>
+        </div>
+        <div class="meta">
+          <p class="plate-no"><span class="big-num">02</span></p>
+          <h2>Sealed</h2>
+          <p class="hook">A note that can't be read folded.</p>
+          <p class="tease"><b>Unfold</b> the wax cracks and the letter pops up from the crease.</p>
+        </div>
+      </a>
+      <footer class="folio">— 1 —</footer>
+    </div>
+    <div class="gutter" aria-hidden="true"><i class="burst"></i></div>
+    <div class="page right">
+      <header class="running"><span>Vol. I</span><span>ii</span></header>
+      <a class="card" href="apps/hockey/" style="--tint:#27b59a">
+        <div class="plate pv-hockey" aria-hidden="true">
+          <div class="rink"><div class="line"></div><b class="pad a"></b><b class="pad b"></b><b class="puck"></b></div>
+        </div>
+        <div class="meta">
+          <p class="plate-no"><span class="big-num">03</span></p>
+          <h2>Hinge Hockey</h2>
+          <p class="hook">Air hockey against the machine.</p>
+          <p class="tease"><b>Unfold</b> mid-game and a friend's paddle drops in, face to face.</p>
+        </div>
+      </a>
+      <a class="card" href="apps/liquid/" style="--tint:#8b6bff">
+        <div class="plate pv-liquid" aria-hidden="true">
+          <div class="goo"><b></b><b></b><b></b><b></b><b></b></div>
+        </div>
+        <div class="meta">
+          <p class="plate-no"><span class="big-num">04</span></p>
+          <h2>Liquid Fold</h2>
+          <p class="hook">Glowing liquid, pooled on the small screen.</p>
+          <p class="tease"><b>Unfold</b> it bursts through the crease. Tilt to pour it back.</p>
+        </div>
+      </a>
+      <footer class="folio spread-foot">
+        <span class="count" data-count>Not yet unfolded</span>
+        <button class="link-btn" type="button" data-how>How it works</button>
+      </footer>
+    </div>
+  </section>
+</main>
+
+<div class="desk-ui">
+  <button id="deskToggle" class="foil-btn" type="button"><span class="ico" aria-hidden="true">◫</span> Unfold the phone</button>
+</div>
+
+<dialog id="how" class="sheet" aria-labelledby="howTitle">
+  <form method="dialog" class="sheet-inner">
+    <p class="eyebrow">Colophon</p>
+    <h2 id="howTitle">How Duo Lab knows you unfolded</h2>
+    <p>Safari doesn't tell a web page that your iPhone folds. There's no hinge angle and no posture API. What it does report is that <em>the window changed size</em>.</p>
+    <figure class="diagram" aria-hidden="true">
+      <div class="scr small"><span>cover</span><b>466 × 678</b></div>
+      <div class="arrow">→</div>
+      <div class="scr big"><i></i><span>inner</span><b>626 × 890</b></div>
+    </figure>
+    <p>Both screens have almost the same shape. So Duo Lab watches the <strong>short side</strong> of the window. If it passes <strong>560&nbsp;px</strong> on a touch screen, the book is open. Every experiment listens for that moment and turns it into something new.</p>
+    <p>Other phones don't fold, so the <strong>Unfold</strong> button simulates the same change.</p>
+    <p class="live" id="live"></p>
+    <button class="foil-btn" value="close">Got it</button>
+  </form>
+</dialog>
+
+<aside id="coach" class="coach" hidden>
+  <button class="x" type="button" aria-label="Dismiss">×</button>
+  <p><strong>Keep the booklet.</strong> Tap <span class="share-ico" aria-label="Share">
+    <svg viewBox="0 0 20 24" width="14" height="17"><path d="M10 1v14M5 6l5-5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10H3v12h14V10h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+  </span> then <em>Add to Home Screen</em> and it opens full screen, like an app.</p>
+  <i class="tip" aria-hidden="true"></i>
+</aside>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#050307">
+<link rel="manifest" href="../../manifest.webmanifest">
+<link rel="apple-touch-icon" href="../../icons/apple-touch-icon.png">
+<title>Liquid Fold · Duo Lab</title>
+<meta name="description" content="Glowing liquid that bursts through the crease when you unfold your phone. Tilt to pour it back like an hourglass.">
+<meta property="og:title" content="Liquid Fold · Duo Lab">
+<meta property="og:description" content="Glowing liquid that bursts through the crease when you unfold your phone. Tilt to pour it back like an hourglass.">
+<link rel="stylesheet" href="../../shared/duo.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="gl" aria-label="Glowing liquid. Drag to stir, double-tap to add color."></canvas>
+
+<button id="hint" type="button" aria-label="Unfold to double the world">Unfold <b>→</b></button>
+
+<div id="pour">
+  <button id="pourBtn" class="duo-btn" type="button">Tap to pour</button>
+  <p>tilt to slosh · drag to stir · double-tap for color</p>
+</div>
+
+<div id="puck" role="slider" tabindex="0" aria-label="Gravity direction (drag, or use arrow keys)" aria-valuemin="0" aria-valuemax="359">
+  <div class="ring"></div><div class="knob"></div>
+</div>
+
+<div id="recbadge" hidden><i></i>REC <b>6.0</b></div>
+
+<div id="dock">
+  <div id="chips" role="radiogroup" aria-label="Liquid theme"></div>
+  <button id="rec" type="button" data-state="idle" aria-label="Record a 6 second clip"><i></i><span>Rec 6s</span></button>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
