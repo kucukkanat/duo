@@ -1,8 +1,9 @@
 // fold.js — unfold detection for iPhone Duo (and a simulated fold everywhere else).
 //
-// Safari exposes the fold ONLY as a viewport resize: cover screen ≈ 466×678 CSS px,
-// inner screen ≈ 626×890. Both have nearly the same aspect ratio, so we key on the
-// short side of the viewport crossing a threshold instead of on orientation.
+// Safari exposes the fold ONLY as a viewport resize: cover screen ≈ 466×678 CSS px
+// (portrait), inner screen ≈ 890×626 (LANDSCAPE: the phone opens like a book, 164.6mm
+// wide × 117.8mm tall, crease running vertically down the middle like a spine).
+// We key on the short side of the viewport crossing a threshold.
 // Normal phones (≤ 440px short side) are "closed"; they can toggle a simulated fold.
 //
 // Usage:
@@ -29,8 +30,9 @@ function measure() {
     simulated: simulated && !physicalOpen,
     width: w,
     height: h,
-    // Passport fold: crease runs along the long axis' center line.
-    crease: open ? (h >= w ? 'vertical' : 'horizontal') : null,
+    // Book fold: natural open pose is landscape with a vertical spine. If the user
+    // rotates the open phone to portrait, the crease becomes horizontal.
+    crease: open ? (w >= h ? 'vertical' : 'horizontal') : null,
   };
 }
 
