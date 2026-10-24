@@ -281,3 +281,19 @@ html[data-crease="horizontal"] body:not([data-mode="cover"]) #booth::after { top
   .tip { font-size: 8.5px; }
 }
 html[data-fold="open"] .duo-fold-toggle { background: rgba(22,18,26,.82); color: #f6f0e1; border-color: rgba(243,220,142,.5); }
+
+/* ---------- horizontal crease (inner screen held landscape): side-by-side grids inside each half ---------- */
+html[data-crease="horizontal"] body[data-mode="live"] .cam-page { display: grid; grid-template: "b s" auto "b d" 1fr / 1fr minmax(200px, 34%); gap: 10px; }
+html[data-crease="horizontal"] body[data-mode="live"] .cam-page .bezel { grid-area: b; }
+html[data-crease="horizontal"] body[data-mode="live"] .cam-page .styles { grid-area: s; }
+html[data-crease="horizontal"] body[data-mode="live"] .cam-page .deck { grid-area: d; }
+html[data-crease="horizontal"] body[data-mode="live"] .twin-page,
+html[data-crease="horizontal"] body[data-mode="reveal"] .reveal-page { display: grid; gap: 8px 16px; padding-top: 16px;
+  grid-template: "k k" auto "t q" auto "t a" auto "t c" 1fr / 1fr minmax(200px, 34%); }
+html[data-crease="horizontal"] .paper .kicker { grid-area: k; }
+html[data-crease="horizontal"] .paper .twin-live, html[data-crease="horizontal"] .paper .twins { grid-area: t; justify-content: center; }
+html[data-crease="horizontal"] .paper .question { grid-area: q; text-align: left; }
+html[data-crease="horizontal"] .paper .tip, html[data-crease="horizontal"] .paper .axis-ctl { grid-area: a; text-align: left; }
+html[data-crease="horizontal"] .paper .actions { grid-area: c; align-content: start; }
+html[data-crease="horizontal"] .twin-live figure, html[data-crease="horizontal"] .twin { flex: 0 1 auto; height: 100%; aspect-ratio: 4 / 5; }
+html[data-crease="horizontal"] .twin-live figcaption, html[data-crease="horizontal"] .twin figcaption { font-size: 52px !important; }
