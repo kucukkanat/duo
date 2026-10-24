@@ -237,7 +237,7 @@ function pots() {
 function night() {
   const r = rng(42);
   let stars = '';
-  for (let i = 0; i < 16; i++) stars += sparkle((10 + r() * 180).toFixed(1), (8 + r() * 70).toFixed(1), 1.5 + r() * 3, '#FFE9A8', 'twinkle');
+  for (let i = 0; i < 16; i++) stars += sparkle(+(10 + r() * 180).toFixed(1), +(8 + r() * 70).toFixed(1), 1.5 + r() * 3, '#FFE9A8', 'twinkle');
   return svg(200, 152, `
     ${stars}
     <path mask="url(#moon)" ${ed('#F6E7B0')} d="M150 18a20 20 0 1 0 0.01 0Z"/>

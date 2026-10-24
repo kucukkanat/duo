@@ -57,8 +57,8 @@ html, body { background: #120c0e; }
   100% { opacity: 1; filter: blur(0); transform: none; }
 }
 
-.note { position: absolute; left: 8cqw; right: 8cqw; top: calc(54% + 6.6 * var(--u)); z-index: 3; pointer-events: none; }
-.msg { margin: 0; font: 500 calc(5.5 * var(--u))/1.2 var(--hand); color: var(--ink); text-align: center; }
+.note { position: absolute; left: 8cqw; right: 8cqw; top: calc(54% + 7.5 * var(--u)); z-index: 3; pointer-events: none; }
+.msg { margin: 0; font: 500 calc(6 * var(--u))/1.22 var(--hand); color: var(--ink); text-align: center; }
 .msg .ch { opacity: 0; }
 .msg .ch.on { opacity: 1; animation: wet 1.4s ease-out both; }
 @keyframes wet { 0% { color: var(--accent); text-shadow: 0 0 calc(.6 * var(--u)) var(--accent); } 100% { color: var(--ink); text-shadow: 0 0 0 transparent; } }
@@ -207,7 +207,7 @@ html, body { background: #120c0e; }
 .maker { --accent: #E8577A; background:
   radial-gradient(90% 50% at 20% 0%, rgba(255,214,160,.16), transparent 60%), radial-gradient(120% 90% at 50% 40%, transparent 40%, rgba(0,0,0,.5)), #1f1518; }
 .maker::before { content: ""; position: absolute; inset: 0; background-image: var(--noise), var(--fibre); background-size: 240px, 400px; mix-blend-mode: overlay; opacity: .45; pointer-events: none; }
-.mk-scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: calc(var(--safe-t) + 54px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 110px) calc(var(--safe-l) + 18px); }
+.mk-scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-mask-image: linear-gradient(transparent calc(var(--safe-t) + 30px), #000 calc(var(--safe-t) + 70px)); mask-image: linear-gradient(transparent calc(var(--safe-t) + 30px), #000 calc(var(--safe-t) + 70px)); -webkit-overflow-scrolling: touch; padding: calc(var(--safe-t) + 54px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 110px) calc(var(--safe-l) + 18px); }
 .mk-head { text-align: center; margin-bottom: 14px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; font: italic 600 34px/1 var(--serif); color: #F6EBDD; letter-spacing: -.01em; }
 .brand .mark { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.5), transparent 45%), #9E1B22; box-shadow: 0 2px 4px rgba(0,0,0,.5), inset 0 -2px 3px rgba(0,0,0,.3); }
@@ -216,7 +216,7 @@ html, body { background: #120c0e; }
 .pv-tabs { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); }
 .pv-tabs button { border: 0; background: none; padding: 7px 16px; border-radius: 999px; font: 600 13px ui-rounded, system-ui, sans-serif; color: #cbb9aa; cursor: pointer; transition: background .25s, color .25s; }
 .pv-tabs button[aria-selected="true"] { background: #F6EBDD; color: #241a1c; }
-.pv-box { position: relative; width: min(100%, 330px, 46cqh); aspect-ratio: 3 / 4; container-type: size; border-radius: 16px; overflow: hidden;
+.pv-box { position: relative; width: min(100%, 300px, 40cqh); aspect-ratio: 3 / 4; container-type: size; border-radius: 16px; overflow: hidden;
   box-shadow: 0 20px 50px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06); }
 .maker.wide .pv-box { width: min(100%, 470px, 52cqh); }
 .pv-tip { margin: 0; font: italic 500 13px var(--serif); color: #a8968a; min-height: 1em; }
