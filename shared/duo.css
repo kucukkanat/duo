@@ -1,0 +1,48 @@
+/* duo.css — shared base for Duo Lab apps. Each app layers its own style on top. */
+:root {
+  --bg: #0b0b10;
+  --fg: #f4f1ea;
+  --muted: #9a97a6;
+  --accent: #ff5a36;
+  --glass: rgba(255, 255, 255, 0.08);
+  --glass-edge: rgba(255, 255, 255, 0.18);
+  --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, sans-serif;
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font); }
+body { overflow: hidden; overscroll-behavior: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+button { font: inherit; color: inherit; }
+
+/* Crease guide, visible only when unfolded. Apps can place .duo-crease anywhere. */
+.duo-crease { position: fixed; pointer-events: none; z-index: 5; opacity: 0; transition: opacity .4s; }
+html[data-fold="open"] .duo-crease { opacity: 1; }
+html[data-crease="vertical"] .duo-crease { top: 0; bottom: 0; left: calc(var(--crease-x) - 1px); width: 2px;
+  background: linear-gradient(transparent, rgba(255,255,255,.12) 20%, rgba(255,255,255,.12) 80%, transparent); }
+html[data-crease="horizontal"] .duo-crease { left: 0; right: 0; top: calc(var(--crease-y) - 1px); height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.12) 20%, rgba(255,255,255,.12) 80%, transparent); }
+
+.duo-chrome { position: fixed; z-index: 50; top: calc(var(--safe-t) + 8px); left: calc(var(--safe-l) + 10px);
+  right: calc(var(--safe-r) + 10px); display: flex; justify-content: space-between; pointer-events: none; }
+.duo-chrome > * { pointer-events: auto; }
+.duo-back, .duo-fold-toggle { font-size: 13px; font-weight: 600; letter-spacing: .02em; color: var(--fg);
+  text-decoration: none; padding: 7px 12px; border-radius: 999px; border: 1px solid var(--glass-edge);
+  background: var(--glass); -webkit-backdrop-filter: blur(14px) saturate(1.6); backdrop-filter: blur(14px) saturate(1.6); cursor: pointer; }
+.duo-fold-toggle[hidden] { display: none; }
+
+.duo-toast { position: fixed; z-index: 100; left: 50%; bottom: calc(var(--safe-b) + 24px);
+  transform: translate(-50%, 20px); opacity: 0; transition: .3s; padding: 10px 16px; border-radius: 999px;
+  background: rgba(20,20,26,.85); border: 1px solid var(--glass-edge); font-size: 14px;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.duo-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+.duo-btn { appearance: none; border: 0; border-radius: 999px; padding: 14px 22px; font-weight: 700; font-size: 16px;
+  background: var(--fg); color: #111; cursor: pointer; transition: transform .15s; }
+.duo-btn:active { transform: scale(.96); }
+.duo-btn.ghost { background: var(--glass); color: var(--fg); border: 1px solid var(--glass-edge); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
