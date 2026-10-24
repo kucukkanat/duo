@@ -328,7 +328,7 @@ class Sealed {
     // Envelope: idle breathing + tilt, specular follows tilt.
     if (this.cover.style.display !== 'none' && (this.state === 'sealed' || this.state === 'broken')) {
       const br = reduced ? 0 : Math.sin(now / 1000 * 1.3) * .6;
-      this.env.style.transform = `rotateX(${(-tilt.y * 7 + br).toFixed(2)}deg) rotateY(${(tilt.x * 7).toFixed(2)}deg)`;
+      this.env.style.transform = `rotateX(${(-tilt.y * 5 + br).toFixed(2)}deg) rotateY(${(tilt.x * 5).toFixed(2)}deg)`;
       this.seal.setGloss(tilt.x + Math.sin(now / 2400) * .15, tilt.y);
       this.env.style.setProperty('--sx', (-tilt.x * 8).toFixed(1) + 'px');
       this.env.style.setProperty('--sy', (10 - tilt.y * 6).toFixed(1) + 'px');
