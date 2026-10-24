@@ -86,7 +86,7 @@ function targetLayout() {
   const vert = two ? s.crease === 'horizontal' : ah >= aw;
   let theta, L, Wd;
   if (vert) { theta = 0; L = ah; Wd = aw; } else { theta = Math.PI / 2; L = aw; Wd = ah; }
-  if (two) { Wd = Math.min(Wd, L * 1.8); L = Math.min(L, Wd * 1.1); }
+  if (two) { Wd = Math.min(Wd, L * 1.8); L = Math.min(L, Wd * (vert ? 2.1 : 1.7)); }
   else { Wd = Math.min(Wd, L * 0.72); L = Math.min(L, Wd * 2.15); }
   return { cx: l + aw / 2, cy: t + ah / 2, Wd, L, theta, zoom: 1 };
 }
@@ -831,12 +831,12 @@ function drawScoreboard() {
     // each player gets their own [mine | theirs] board facing them
     for (const who of ['p1', 'p2']) {
       ctx.save();
-      if (who === 'p1') ctx.translate(W - tw * 1.2 - 16, L / 2 + th * 0.5 + 22); else { ctx.translate(tw * 1.2 + 16, L / 2 - th * 0.5 - 22); ctx.rotate(Math.PI); }
+      if (who === 'p1') ctx.translate(W - tw * 1.2 - 16, L / 2 + th * 0.5 + 32); else { ctx.translate(tw * 1.2 + 16, L / 2 - th * 0.5 - 32); ctx.rotate(Math.PI); }
       const mine = who === 'p1' ? 0 : 1, col = who === 'p1' ? C.p1 : topC, ocol = who === 'p1' ? topC : C.p1;
       const pw = who === 'p2' ? G.p2Power : 1;
       flapTile(-tw * 0.58, 0, tw, th, G.flips[mine], col, a * pw);
       flapTile(tw * 0.58, 0, tw, th, G.flips[1 - mine], ocol, a * pw * 0.8);
-      label(who === 'p1' ? nm : 'PLAYER 2', -tw * 0.58, th / 2 + 12, 8, col, 'center', 0.75 * pw);
+      label(who === 'p1' ? nm.slice(0, 5) : 'P2', -tw * 0.58, th / 2 + 12, 8, col, 'center', 0.75 * pw);
       label(fmt(G.elapsed), tw * 0.58, th / 2 + 12, 10, '#c9c6ff', 'center', 0.55 * pw);
       ctx.restore();
     }
@@ -875,17 +875,6 @@ function drawMsgs() {
         const ss = size * 0.36; ctx.font = `700 ${ss}px ${FL}`; ctx.shadowBlur = ss; ctx.fillStyle = msg.color; ctx.globalAlpha = alpha;
         ctx.fillText(msg.sub.split('').join(' '), 0, size * 0.85);
       }
-      ctx.restore();
-    }
-  }
-  // end-of-game labels for both players when face to face
-  if (G.mode === 'over' && G.two && G.over) {
-    for (const who of ['p1', 'p2']) {
-      const won = (who === 'p1') === (G.over.winner === 0);
-      ctx.save(); ctx.translate(W / 2, who === 'p1' ? L * 0.86 : L * 0.14); facingRotate(who);
-      const size = k.m * 0.1; ctx.font = `900 italic ${size}px ${FL}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const col = won ? C.gold : '#8d8aa8';
-      ctx.shadowColor = col; ctx.shadowBlur = size * 0.6; ctx.fillStyle = col; ctx.fillText(won ? 'YOU WIN' : 'YOU LOSE', 0, 0);
       ctx.restore();
     }
   }
@@ -948,18 +937,33 @@ nameIn.forEach(i => {
   i.addEventListener('input', () => { G.name = i.value.trim().slice(0, 12); store.set('hinge.name', G.name); nameIn.forEach(o => o !== i && (o.value = i.value)); });
   i.addEventListener('keydown', e => { if (e.key === 'Enter') i.blur(); });
 });
+const over2 = $('#over2');
 function showPanel(which) {
   menu.hidden = which !== 'menu'; over.hidden = which !== 'over';
+  over2.hidden = !(which === 'over' && G.two);
   if (which) layoutPanels();
 }
 function layoutPanels() {
+  // 2P: each panel sits in its player's half, facing them, clear of the crease.
   const t = targetLayout();
-  const rot = G.two && Math.abs(Math.sin(t.theta)) > 0.5;
-  for (const w of [menu, over]) {
+  const spine = Math.abs(Math.sin(t.theta)) > 0.5; // goals left/right, players at the short ends
+  const CL = 30; // keep clear of the crease
+  for (const w of [menu, over, over2]) {
     const p = w.firstElementChild, pw = p.offsetWidth || 330, ph = p.offsetHeight || 480;
-    const s = rot ? Math.min(1, (vw - 24) / ph, (vh - 24) / pw) : Math.min(1, (vw - 24) / pw, (vh - 76) / ph);
-    p.style.setProperty('--rot', rot ? '90deg' : '0deg');
-    p.style.setProperty('--s', s.toFixed(3));
+    const isP2 = w === over2;
+    let rot = 0, tx = 0, ty = 0, sc;
+    if (!G.two) sc = Math.min(1, (vw - 24) / pw, (vh - 76) / ph);
+    else if (spine) {
+      const hw = vw / 2 - CL - 10, hh = vh - 24;
+      rot = isP2 ? -90 : 90; tx = (isP2 ? 1 : -1) * (CL / 2 + vw / 4); sc = Math.min(1, hw / ph, hh / pw);
+    } else {
+      const hw = vw - 24, hh = vh / 2 - CL - 10;
+      rot = isP2 ? 180 : 0; ty = (isP2 ? -1 : 1) * (CL / 2 + vh / 4); sc = Math.min(1, hw / pw, hh / ph);
+    }
+    p.style.setProperty('--rot', rot + 'deg');
+    p.style.setProperty('--tx', tx.toFixed(1) + 'px');
+    p.style.setProperty('--ty', ty.toFixed(1) + 'px');
+    p.style.setProperty('--s', sc.toFixed(3));
   }
 }
 function updateMenuText() {
@@ -974,7 +978,7 @@ function setDiff(d) {
 }
 diffBtns.forEach(b => b.addEventListener('click', () => { if (!b.disabled) { setDiff(+b.dataset.d); haptic(); sfx.init(); } }));
 $('#play').addEventListener('click', () => { sfx.init(); haptic(); newGame(); });
-$('#rematch').addEventListener('click', () => { sfx.init(); haptic(); newGame(); });
+for (const id of ['#rematch', '#rematch2']) $(id).addEventListener('click', () => { sfx.init(); haptic(); newGame(); });
 $('#toMenu').addEventListener('click', () => { G.mode = 'demo'; G.score = [0, 0]; G.flips.forEach(f => { f.v = f.p = 0; f.t = 1; }); faceoff('center'); showPanel('menu'); });
 $('#share').addEventListener('click', async () => {
   haptic();
@@ -990,9 +994,14 @@ $('#share').addEventListener('click', async () => {
 function fillOver() {
   const [a, b] = G.score, w = G.over.winner;
   const res = $('#result');
-  res.textContent = G.two ? (w === 0 ? `${(G.name || 'Player 1').toUpperCase()} WINS` : 'PLAYER 2 WINS') : w === 0 ? 'YOU WIN' : 'AI WINS';
-  res.style.setProperty('--hue', w === 0 ? C.p1 : G.two ? C.p2 : C.ai);
+  res.textContent = G.two ? (w === 0 ? 'YOU WIN' : 'YOU LOSE') : w === 0 ? 'YOU WIN' : 'AI WINS';
+  res.style.setProperty('--hue', w === 0 ? C.p1 : G.two ? '#8d8aa8' : C.ai);
   $('#final').textContent = `${a}–${b} · ${fmt(G.over.time)}`;
+  const r2 = $('#result2');
+  r2.textContent = w === 1 ? 'YOU WIN' : 'YOU LOSE';
+  r2.style.setProperty('--hue', w === 1 ? C.p2 : '#8d8aa8');
+  $('#final2').textContent = `${b}–${a} · ${fmt(G.over.time)}`;
+  $('#vs2').textContent = `vs ${G.name || 'Player 1'}`;
   const beat = $('#beat'), ch = G.challenge;
   beat.hidden = true;
   if (ch && !G.two && ch.d === G.diff) {
@@ -1054,4 +1063,4 @@ document.fonts?.load?.(`600 40px ${FD}`).catch(() => {});
 document.fonts?.load?.(`900 40px ${FL}`).catch(() => {});
 requestAnimationFrame(loop);
 // expose for testing
-window.__hockey = { G, puck, bot, top, cur, k: () => k, newGame };
+if (/[?&]debug\b/.test(location.search)) window.__hockey = { G, puck, bot, top, cur, k: () => k, newGame };
