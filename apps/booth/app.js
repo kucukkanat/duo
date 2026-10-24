@@ -253,7 +253,7 @@ function processStyle(ctx, w, h, style, t, { cell = 6, seed = Math.random() } = 
       const l = 0.3 * r + 0.59 * g + 0.11 * b;
       r = l + (r - l) * 0.55; g = l + (g - l) * 0.55; b = l + (b - l) * 0.55;
       const v = vig[p] * 0.25 + 0.75;
-      d[i] = S(r) * 235 * v + 8; d[i + 1] = S(g) * 240 * v + 10; d[i + 2] = S(b) * 250 * v + 18;
+      d[i] = S(r) * 215 * v + 6; d[i + 1] = S(g) * 220 * v + 8; d[i + 2] = S(b) * 235 * v + 16;
     }
   }
   ctx.putImageData(img, 0, 0);
@@ -285,13 +285,13 @@ function processStyle(ctx, w, h, style, t, { cell = 6, seed = Math.random() } = 
     const lg = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
     const cols = ['#ff9ad5', '#9be7ff', '#c8ffb0', '#fff3a1'];
     for (let k = 0; k <= 12; k++) lg.addColorStop(k / 12, cols[(k + Math.floor(phase * 4)) % 4]);
-    ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.85; ctx.fillStyle = lg; ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'overlay'; ctx.globalAlpha = 0.6; ctx.fillStyle = lg; ctx.fillRect(0, 0, w, h);
     // specular band
     const off = (phase * 2 - 0.5);
     const sg = ctx.createLinearGradient(cx - dx, cy - dy, cx + dx, cy + dy);
     const a0 = clamp(off - 0.12, 0, 1), a1 = clamp(off, 0, 1), a2 = clamp(off + 0.12, 0, 1);
     sg.addColorStop(0, 'rgba(255,255,255,0)'); sg.addColorStop(a0, 'rgba(255,255,255,0)'); sg.addColorStop(a1, 'rgba(255,255,255,.55)'); sg.addColorStop(a2, 'rgba(255,255,255,0)'); sg.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.7; ctx.fillStyle = sg; ctx.fillRect(0, 0, w, h);
+    ctx.globalCompositeOperation = 'screen'; ctx.globalAlpha = 0.45; ctx.fillStyle = sg; ctx.fillRect(0, 0, w, h);
     // fine diffraction lines
     ctx.globalCompositeOperation = 'soft-light'; ctx.globalAlpha = 0.35; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
     ctx.beginPath(); for (let x = -h; x < w; x += 5) { ctx.moveTo(x, 0); ctx.lineTo(x + h, h); } ctx.stroke();
