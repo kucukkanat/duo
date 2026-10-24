@@ -1,10 +1,12 @@
 // Liquid Fold — glowing liquid that bursts through the crease when the phone unfolds.
-import { fold, unlock, haptic, shareFile, recordCanvas, videoExt, toast, mountChrome, keepAwake } from '../../shared/kit.js';
+import { fold, unlock, haptic as kitHaptic, shareFile, recordCanvas, videoExt, toast, mountChrome, keepAwake } from '../../shared/kit.js';
 import { Fluid } from './sim.js';
 import { GLRenderer, CanvasRenderer, hex } from './render.js';
 import { Sfx } from './audio.js';
 
 const $ = s => document.querySelector(s);
+// Haptics only after the first user gesture (avoids blocked-vibrate console errors on auto events).
+const haptic = p => { if (!navigator.userActivation || navigator.userActivation.hasBeenActive) kitHaptic(p); };
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const lerp = (a, b, t) => a + (b - a) * t;
 const easeOut = t => 1 - Math.pow(1 - clamp(t, 0, 1), 3);
@@ -18,9 +20,9 @@ const coarse = matchMedia('(pointer: coarse)').matches;
 const THEMES = [
   { id: 'lava', name: 'Lava', body: ['#ff4a12', '#ff7a1a', '#ffb02e'], hot: '#ffd25a', crustC: '#2a0703', bg: ['#1a0604', '#040101'], glowC: '#ff5a1f', glow: 1.1, iri: 0.05, metal: 0, crust: 0.85, pops: ['#ffe36b', '#ff2a00', '#ffffff'] },
   { id: 'mercury', name: 'Mercury', body: ['#c8d0da', '#aab4c0', '#e8edf3'], hot: '#ffffff', crustC: '#4a5260', bg: ['#161a22', '#030405'], glowC: '#9fb4d0', glow: 0.35, iri: 0.18, metal: 1, crust: 0, pops: ['#ffd27a', '#8fd3ff', '#ff9fd0'] },
-  { id: 'ocean', name: 'Ocean', body: ['#0a84ff', '#00c2ff', '#1a4dff'], hot: '#7ff6ff', crustC: '#02163f', bg: ['#031a33', '#01040b'], glowC: '#19b4ff', glow: 0.9, iri: 0.3, metal: 0, crust: 0.25, pops: ['#3ff2c0', '#ffffff', '#7a5cff'] },
-  { id: 'aurora', name: 'Aurora', body: ['#38ff9c', '#00e1ff', '#9d6bff'], hot: '#e6fff4', crustC: '#2b1268', bg: ['#0c0a26', '#020108'], glowC: '#5affc0', glow: 1.0, iri: 0.6, metal: 0, crust: 0.2, pops: ['#ff6bd5', '#fff36b', '#38ff9c'] },
-  { id: 'neon', name: 'Neon', body: ['#ff2bd6', '#00f0ff', '#b14bff'], hot: '#ffffff', crustC: '#3a0050', bg: ['#14041f', '#000000'], glowC: '#ff3be0', glow: 1.3, iri: 0.4, metal: 0, crust: 0.15, pops: ['#b6ff00', '#00f0ff', '#ffea00'] },
+  { id: 'ocean', name: 'Ocean', body: ['#0a84ff', '#00c2ff', '#1a4dff'], hot: '#4ff0ff', crustC: '#02163f', bg: ['#031a33', '#01040b'], glowC: '#19b4ff', glow: 0.9, iri: 0.3, metal: 0, crust: 0, pops: ['#3ff2c0', '#ffffff', '#7a5cff'] },
+  { id: 'aurora', name: 'Aurora', body: ['#38ff9c', '#00e1ff', '#9d6bff'], hot: '#9effd2', crustC: '#2b1268', bg: ['#0c0a26', '#020108'], glowC: '#5affc0', glow: 1.0, iri: 0.6, metal: 0, crust: 0, pops: ['#ff6bd5', '#fff36b', '#38ff9c'] },
+  { id: 'neon', name: 'Neon', body: ['#ff2bd6', '#00f0ff', '#b14bff'], hot: '#ff9df0', crustC: '#3a0050', bg: ['#14041f', '#000000'], glowC: '#ff3be0', glow: 1.3, iri: 0.4, metal: 0, crust: 0, pops: ['#b6ff00', '#00f0ff', '#ffea00'] },
 ];
 for (const t of THEMES) {
   t.bodyC = t.body.map(hex); t.hotC = hex(t.hot); t.crustC = hex(t.crustC);
@@ -469,6 +471,7 @@ recBtn.addEventListener('click', async () => {
 });
 function setRecUI() {
   recBtn.dataset.state = recState;
+  recBtn.setAttribute('aria-label', recState === 'ready' ? 'Share the recorded clip' : recState === 'rec' ? 'Recording' : 'Record a 6 second clip');
   recBtn.querySelector('span').textContent = recState === 'ready' ? 'Share clip' : recState === 'rec' ? '6s' : 'Rec 6s';
   recBadge.hidden = recState !== 'rec';
   document.body.classList.toggle('recording', recState === 'rec');

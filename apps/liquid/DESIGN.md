@@ -6,11 +6,11 @@
 4. **Palettes** (body, hot, crust/deep, background top → background bottom, glow):
    - Lava: #ff4a12, #ffd25a, #2a0703, #1a0604 → #040101, glow #ff5a1f
    - Mercury: #c8d0da, #ffffff, #4a5260, #12151b → #030405. Chrome environment reflection with metal = 1.
-   - Ocean: #0a84ff, #7ff6ff, #02163f, #031228 → #01040b, glow #19b4ff
+   - Ocean: #0a84ff, #4ff0ff, #02163f, #031228 → #01040b, glow #19b4ff
    - Aurora: #38ff9c, #c5a3ff, #2b1268, #0a0820 → #020108. Iridescence 0.6.
    - Neon: #ff2bd6, #00f0ff, #3a0050, #10031a → #000000. Glow 1.3.
 5. **Crease wall.** A glass divider: a refractive bar with edge highlights and an accent halo. The gap ends are two glowing beads.
-6. **Unfold storyboard.** Everything below is timed from t=0, when the fold event lands.
+6. **Unfold storyboard.** The main case is the cover screen at 466×678 portrait opening to the inner screen at 890×626 landscape, with a vertical glass spine at x = W/2. When the open phone is held in portrait, or on simulated phones, the divider is horizontal and the liquid pours downward. Everything below is timed from t=0, when the fold event lands.
    - 0–600ms: the camera morphs from the old framing to the full spread, so the world visibly stretches and doubles. The liquid is remapped into the old half.
    - 0–260ms: the glass wall grows in from both ends toward the gap.
    - 280ms: the gap cracks open with an overshoot. A chromatic (RGB-split) flash fires at the gap, followed by 140 spray droplets. Gravity is pulled toward the new half at 2.4g, particles near the gap get a velocity kick, and the camera shakes (8px, decaying over 350ms). A whoosh and 6 glugs play, with a haptic tick.

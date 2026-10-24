@@ -117,8 +117,8 @@ void main(){
   float fres = pow(1.0 - N.z, 2.2);
 
   // speed tint: slow -> crust, fast -> hot
-  float heat = smoothstep(0.02, 0.35, spd);
-  vec3 body = mix(base, uHot, heat * 0.55);
+  float heat = smoothstep(0.08, 0.6, spd);
+  vec3 body = mix(base, uHot, heat * 0.45);
   float crustAmt = 0.0;
   if (uMat.w > 0.0) {
     // crust: cracked skin pattern where the liquid is slow
@@ -140,10 +140,13 @@ void main(){
   if (uMat.z > 0.0) {
     // chrome: reflect a studio environment
     vec3 R = reflect(-V, N);
-    float envY = dot(R.xy, -uLight);
-    vec3 env = mix(vec3(0.03,0.035,0.045), vec3(1.0), smoothstep(-0.05, 0.55, envY));
-    env += vec3(0.9) * smoothstep(0.86, 0.95, envY);
-    env = mix(env, env*vec3(0.75,0.85,1.05), 0.5) * (0.55 + 0.45*N.z);
+    // studio sky: bright softbox overhead (towards -gravity), dark floor, crisp horizon band
+    float envY = dot(R.xy, -uLight) * 1.3 + (0.5 - sp.y) * 0.9 + (sp.x - 0.5) * 0.15;
+    vec3 env = mix(vec3(0.16,0.17,0.2), vec3(1.0), smoothstep(-0.6, 0.55, envY));
+    env += vec3(0.8) * smoothstep(0.03, 0.0, abs(envY - 0.12)) * 0.6;
+    env += vec3(1.0) * smoothstep(0.75, 0.9, envY) * 0.7;
+    env *= 0.6 + 0.4 * vnoise(p * 0.012 + R.xy * 3.0);
+    env = mix(env, env*vec3(0.78,0.88,1.06), 0.5);
     vec3 chrome = env * mix(vec3(1.0), base, 0.35) + refr * 0.25 + iri * fres * 0.2;
     liquid = mix(liquid, chrome, uMat.z);
   }
