@@ -882,7 +882,7 @@ function drawMsgs() {
   if (G.mode === 'over' && G.two && G.over) {
     for (const who of ['p1', 'p2']) {
       const won = (who === 'p1') === (G.over.winner === 0);
-      ctx.save(); ctx.translate(W / 2, who === 'p1' ? L * 0.62 : L * 0.38); facingRotate(who);
+      ctx.save(); ctx.translate(W / 2, who === 'p1' ? L * 0.86 : L * 0.14); facingRotate(who);
       const size = k.m * 0.1; ctx.font = `900 italic ${size}px ${FL}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const col = won ? C.gold : '#8d8aa8';
       ctx.shadowColor = col; ctx.shadowBlur = size * 0.6; ctx.fillStyle = col; ctx.fillText(won ? 'YOU WIN' : 'YOU LOSE', 0, 0);

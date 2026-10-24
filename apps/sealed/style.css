@@ -137,9 +137,10 @@ html, body { background: #120c0e; }
 .desk::after { content: ""; position: absolute; inset: 0; background-image: var(--noise), var(--fibre); background-size: 240px, 400px; mix-blend-mode: overlay; opacity: .5; }
 .cover.fade .desk { opacity: 0; }
 .cover.fade .cover-ui { opacity: 0; transition: opacity .3s; }
-.env-wrap { position: absolute; left: 50%; top: 46%; width: var(--ew); height: calc(var(--ew) * 1.2); margin: calc(var(--ew) * -.6) 0 0 calc(var(--ew) * -.5);
+.env-wrap { position: absolute; left: 50%; top: 46%; perspective: calc(var(--ew) * 3); width: var(--ew); height: calc(var(--ew) * 1.2); margin: calc(var(--ew) * -.6) 0 0 calc(var(--ew) * -.5);
   transition: transform .9s cubic-bezier(.5,0,.75,.2), opacity .8s ease; }
 .full .env-wrap { top: 45%; }
+.env-wrap:not(.away) { transition-timing-function: cubic-bezier(.2,.8,.3,1); transition-duration: .7s, .4s; }
 .env-wrap.away { transform: translateY(80cqh) rotate(-8deg) !important; opacity: 0; }
 .env { position: absolute; inset: 0; perspective: calc(var(--ew) * 2.4); touch-action: none; }
 .env-back { position: absolute; inset: 0; border-radius: calc(var(--ew) * .025); overflow: hidden; background: var(--env);
@@ -262,3 +263,6 @@ html, body { background: #120c0e; }
 @media (prefers-reduced-motion: reduce) {
   .flame, .twinkle, .bulb, .neon, .blink, .glow, .halo, .prompt { animation: none !important; }
 }
+
+/* Chrome pills readable over a light, open card */
+html.light-ui .duo-back, html.light-ui .duo-fold-toggle { color: #3a2228; background: rgba(255,255,255,.45); border-color: rgba(60,20,30,.15); }

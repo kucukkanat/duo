@@ -129,9 +129,9 @@ class Sealed {
     this.scene.innerHTML = '';
     const defs = th.layers();
     const em = d.e.slice(0, 3);
-    const pos = [[80], [16, 84], [13, 87, 71]][em.length - 1] || [];
-    const stand = [[18], [18, 24], [18, 26, 8]][em.length - 1] || [];
-    em.forEach((ch, k) => defs.push({ sticker: ch, x: pos[k], w: 17, d: 3, stand: stand[k] }));
+    const pos = [[82], [15, 85], [14, 86, 70]][em.length - 1] || [];
+    const stand = [[9], [9, 13], [9, 13, 4]][em.length - 1] || [];
+    em.forEach((ch, k) => defs.push({ sticker: ch, x: pos[k], w: 14, d: 3, stand: stand[k] }));
     const shadows = h('div', 'shadows');
     this.scene.append(shadows);
     this.layers = defs.map((L, i) => {
@@ -328,7 +328,7 @@ class Sealed {
     // Envelope: idle breathing + tilt, specular follows tilt.
     if (this.cover.style.display !== 'none' && (this.state === 'sealed' || this.state === 'broken')) {
       const br = reduced ? 0 : Math.sin(now / 1000 * 1.3) * .6;
-      this.wrap.style.transform = `rotateX(${(-tilt.y * 7 + br).toFixed(2)}deg) rotateY(${(tilt.x * 7).toFixed(2)}deg)`;
+      this.env.style.transform = `rotateX(${(-tilt.y * 7 + br).toFixed(2)}deg) rotateY(${(tilt.x * 7).toFixed(2)}deg)`;
       this.seal.setGloss(tilt.x + Math.sin(now / 2400) * .15, tilt.y);
       this.env.style.setProperty('--sx', (-tilt.x * 8).toFixed(1) + 'px');
       this.env.style.setProperty('--sy', (10 - tilt.y * 6).toFixed(1) + 'px');
@@ -352,8 +352,8 @@ class Sealed {
     this.state = 'opening';
     this.root.dataset.state = 'opening';
     tilt.tx = tilt.ty = 0;
-    this.wrap.style.transition = 'transform .25s';
-    this.wrap.style.transform = '';
+    this.env.style.transition = 'transform .25s';
+    this.env.style.transform = '';
     this.unit = this.measureU();
     this.card.style.visibility = '';
     this.layers.forEach(L => { L.p = 0; L.v = 0; L.target = 0; });
@@ -373,9 +373,10 @@ class Sealed {
     await wait(470);
     if (run !== this.run) return;
     // ~720ms — envelope drops away, desk fades
-    this.wrap.style.transition = '';
+    this.env.style.transition = '';
     this.wrap.classList.add('away');
     this.cover.classList.add('fade');
+    if (this.full) document.documentElement.classList.toggle('light-ui', !this.root.classList.contains('dark'));
     await wait(300);
     if (run !== this.run) return;
     // ~1000ms — pop-ups rise from the crease
@@ -399,6 +400,7 @@ class Sealed {
     const run = ++this.run;
     this.state = 'closing';
     this.root.dataset.state = 'closing';
+    if (this.full) document.documentElement.classList.remove('light-ui');
     this.card.classList.add('text-fade');
     this.setHint('');
     this.flatten();
@@ -575,8 +577,7 @@ async function recipient(data) {
   const again = h('button', 'ghost-link', 'Fold it closed again');
   again.type = 'button';
   again.addEventListener('click', () => { haptic(); if (fold.state.open && !fold.state.physical) fold.toggle(false); else { wantOpen = false; reconcile(); } });
-  card.cta.append(cta);
-  if (!fold.state.physical) card.cta.append(again);
+  card.cta.append(cta, again);
 
   const prompt = card.ui.querySelector('.prompt'), sub = card.ui.querySelector('.sub');
   const setPrompt = () => {
@@ -611,6 +612,7 @@ async function recipient(data) {
 
   fold.on((s, prev, kind) => {
     if (kind === 'init') return;
+    again.hidden = s.physical;
     if (kind !== 'fold') { card.unit = 0; return; }
     card.unit = 0;
     if (s.open && !prev?.open) wantOpen = true;
