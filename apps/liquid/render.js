@@ -54,36 +54,18 @@ uniform float uDensK;
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898,78.233)))*43758.5453); }
 
-vec3 background(vec2 p, vec2 sp){
-  // p: sim coords, sp: screen uv (0..1, y down)
-  vec2 wn = p / uWorld;
-  vec3 c = mix(uBg0, uBg1, smoothstep(-0.1, 1.1, wn.y));
-  // bokeh blobs (screen-ish space, drift slowly)
-  float t = uFx.z*0.03;
-  for (int i=0;i<5;i++){
-    float fi = float(i);
-    vec2 bc = vec2(fract(0.17+fi*0.31+sin(t+fi)*0.05), fract(0.23+fi*0.47+cos(t*0.7+fi)*0.05));
-    float rr = 0.10 + 0.06*fract(fi*0.73);
-    float d = length((wn - bc) * vec2(uWorld.x/uWorld.y, 1.0));
-    c += uGlowC * 0.07 * smoothstep(rr, rr*0.15, d);
-  }
-  // fine dot grid (gives refraction something to bend)
-  vec2 g = mod(p, 22.0) - 11.0;
-  c += vec3(0.06) * smoothstep(1.6, 0.4, length(g)) * (0.6 + 0.4*wn.y);
-  // vignette
-  vec2 v = sp - 0.5;
-  c *= 1.0 - dot(v,v)*0.9;
-  // outside the world: void
+uniform sampler2D uBgTex;
+float worldMask(vec2 p){
   float inside = step(0.0, p.x)*step(p.x, uWorld.x)*step(0.0, p.y)*step(p.y, uWorld.y);
   if (uWall2.x > 0.5) {
     float a = uWall2.y < 0.5 ? p.x : p.y;
     inside *= step(a, uWall2.w);
-    // new half not yet revealed
-    float newSide = step(uWall.x, a);
-    c *= mix(1.0, uFx.y, newSide);
+    inside *= mix(1.0, uFx.y, step(uWall.x, a));   // new half not yet revealed
   }
-  c = mix(uBg1*0.25, c, inside);
-  return c;
+  return inside;
+}
+vec3 background(vec2 uv, vec2 p){
+  return mix(uBg1*0.22, texture(uBgTex, uv).rgb, worldMask(p));
 }
 
 float field(vec2 uv){ return texture(uField, uv).a; }
@@ -98,6 +80,16 @@ void main(){
 
   vec4 F = texture(uField, vUv);
   float w = F.a;
+  vec3 bg = background(vUv, p);
+  // bloom: blurred field from mips
+  float wb = textureLod(uField, vUv, 3.0).a + textureLod(uField, vUv, 4.5).a * 0.8;
+  vec3 col = bg;
+  if (wb > 0.01) {
+    vec4 Fb = textureLod(uField, vUv, 3.5);
+    vec3 glowCol = mix(uGlowC, Fb.rgb / max(Fb.a, 1e-4), 0.6);
+    col += glowCol * uMat.x * 0.22 * smoothstep(0.0, 2.0, wb);
+  }
+  if (w > uThresh * 0.5) {
   vec3 base = F.rgb / max(w, 1e-4);
   float spd = texture(uVel, vUv).r / max(w, 1e-4);
 
@@ -111,28 +103,32 @@ void main(){
   float thick = clamp((w - uThresh) / 3.0, 0.0, 1.0);
 
   // refraction of the background
-  vec3 refr = background(p + N.xy * 22.0 * (0.6 + thick), sp + N.xy * 0.02);
-  vec3 bg = background(p, sp);
+  vec2 ro = N.xy * (0.6 + thick) * 26.0 / uRes;
+  vec3 refr = background(vUv + vec2(ro.x, -ro.y), p + N.xy * 26.0);
 
   // light from "up" (opposite gravity) and towards viewer
   vec3 L = normalize(vec3(uLight * 0.85, 0.65));
   vec3 V = vec3(0.0, 0.0, 1.0);
   vec3 H = normalize(L + V);
   float ndl = max(dot(N, L), 0.0);
-  float spec = pow(max(dot(N, H), 0.0), 90.0);
-  float sheen = pow(max(dot(N, H), 0.0), 12.0);
+  float nh = max(dot(N, H), 0.0);
+  float spec = pow(nh, 90.0);
+  float sheen = pow(nh, 12.0);
   float fres = pow(1.0 - N.z, 2.2);
 
   // speed tint: slow -> crust, fast -> hot
   float heat = smoothstep(0.02, 0.35, spd);
   vec3 body = mix(base, uHot, heat * 0.55);
-  // crust: cracked skin pattern where the liquid is slow
-  float cr = vnoise(p * 0.03 + vec2(uFx.z * 0.05, 0.0)) * 0.65 + vnoise(p * 0.085 - uFx.z * 0.03) * 0.35;
-  float plate = smoothstep(0.015, 0.06, abs(cr - 0.5));           // 0 on the glowing cracks
-  float slow = 1.0 - smoothstep(0.02, 0.16, spd);
-  float crustAmt = uMat.w * slow * plate * smoothstep(0.05, 0.5, thick);
-  body = mix(body, uCrust, crustAmt * 0.75);
-  body += uHot * uMat.w * slow * (1.0 - plate) * 0.6 * smoothstep(0.05, 0.4, thick);
+  float crustAmt = 0.0;
+  if (uMat.w > 0.0) {
+    // crust: cracked skin pattern where the liquid is slow
+    float cr = vnoise(p * 0.03 + vec2(uFx.z * 0.05, 0.0)) * 0.65 + vnoise(p * 0.085 - uFx.z * 0.03) * 0.35;
+    float plate = smoothstep(0.015, 0.06, abs(cr - 0.5));           // 0 on the glowing cracks
+    float slow = 1.0 - smoothstep(0.02, 0.16, spd);
+    crustAmt = uMat.w * slow * plate * smoothstep(0.05, 0.5, thick);
+    body = mix(body, uCrust, crustAmt * 0.75);
+    body += uHot * uMat.w * slow * (1.0 - plate) * 0.6 * smoothstep(0.05, 0.4, thick);
+  }
 
   vec3 iri = 0.5 + 0.5*cos(6.2832*(vec3(0.0,0.33,0.67) + fres*1.3 + thick*0.6 + uFx.z*0.04));
 
@@ -141,22 +137,19 @@ void main(){
   liquid += body * (0.2 + 0.5*thick + 0.6*heat) * uMat.x * 0.6 * (1.0 - crustAmt*0.7);  // emissive glow
   liquid += iri * fres * uMat.y;
   liquid += mix(body, vec3(1.0), 0.5) * fres * 0.55;              // rim
-  // chrome: reflect a studio environment
-  vec3 R = reflect(-V, N);
-  float envY = dot(R.xy, -uLight);
-  vec3 env = mix(vec3(0.03,0.035,0.045), vec3(1.0), smoothstep(-0.05, 0.55, envY));
-  env += vec3(0.9) * smoothstep(0.86, 0.95, envY) ;
-  env = mix(env, env*vec3(0.75,0.85,1.05), 0.5) * (0.55 + 0.45*N.z);
-  vec3 chrome = env * mix(vec3(1.0), base, 0.35) + bg * 0.15 + iri * fres * 0.2;
-  liquid = mix(liquid, chrome, uMat.z);
+  if (uMat.z > 0.0) {
+    // chrome: reflect a studio environment
+    vec3 R = reflect(-V, N);
+    float envY = dot(R.xy, -uLight);
+    vec3 env = mix(vec3(0.03,0.035,0.045), vec3(1.0), smoothstep(-0.05, 0.55, envY));
+    env += vec3(0.9) * smoothstep(0.86, 0.95, envY);
+    env = mix(env, env*vec3(0.75,0.85,1.05), 0.5) * (0.55 + 0.45*N.z);
+    vec3 chrome = env * mix(vec3(1.0), base, 0.35) + refr * 0.25 + iri * fres * 0.2;
+    liquid = mix(liquid, chrome, uMat.z);
+  }
   liquid += vec3(1.0, 0.98, 0.94) * (spec * 1.6 + sheen * 0.12);
-
-  // bloom: blurred field from mips
-  float wb = textureLod(uField, vUv, 3.0).a + textureLod(uField, vUv, 4.5).a * 0.8;
-  vec4 Fb = textureLod(uField, vUv, 3.5);
-  vec3 glowCol = mix(uGlowC, Fb.rgb / max(Fb.a, 1e-4), 0.6);
-  vec3 col = bg + glowCol * uMat.x * 0.22 * smoothstep(0.0, 2.0, wb);
   col = mix(col, liquid, mask);
+  }
 
   // glass divider
   if (uWall2.x > 0.5) {
@@ -201,6 +194,29 @@ void main(){
   col = col / (1.0 + max(max(col.r, col.g), col.b) * 0.18);
   col += (hash(vUv * uRes + uFx.z) - 0.5) / 255.0;
   o = vec4(col, 1.0);
+}`;
+
+const BG_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 o;
+uniform vec4 uCam; uniform vec2 uWorld; uniform vec3 uBg0, uBg1, uGlowC;
+void main(){
+  vec2 sp = vec2(vUv.x, 1.0 - vUv.y);
+  vec2 p = uCam.xy + sp * (uCam.zw - uCam.xy);
+  vec2 wn = p / uWorld;
+  vec3 c = mix(uBg0, uBg1, smoothstep(-0.1, 1.1, wn.y));
+  for (int i=0;i<6;i++){
+    float fi = float(i);
+    vec2 bc = vec2(fract(0.17+fi*0.31), fract(0.23+fi*0.47));
+    float rr = 0.08 + 0.07*fract(fi*0.73);
+    float d = length((wn - bc) * vec2(uWorld.x/uWorld.y, 1.0));
+    c += uGlowC * (0.05 + 0.03*fract(fi*0.37)) * smoothstep(rr, rr*0.2, d);
+  }
+  vec2 g = mod(p, 22.0) - 11.0;
+  c += vec3(0.055) * smoothstep(1.5, 0.4, length(g)) * (0.6 + 0.4*wn.y);
+  vec2 v = sp - 0.5;
+  c *= 1.0 - dot(v,v)*0.9;
+  o = vec4(c, 1.0);
 }`;
 
 const SPARK_VS = `#version 300 es
@@ -257,6 +273,8 @@ export class GLRenderer {
     this.splat = program(gl, SPLAT_VS, SPLAT_FS);
     this.shade = program(gl, QUAD_VS, SHADE_FS);
     this.spark = program(gl, SPARK_VS, SPARK_FS);
+    this.bgp = program(gl, QUAD_VS, BG_FS);
+    this.bgKey = '';
     this.vao = gl.createVertexArray();
     this.buf = gl.createBuffer();
     gl.bindVertexArray(this.vao);
@@ -295,6 +313,22 @@ export class GLRenderer {
     const gl = this.gl;
     const w = Math.max(1, Math.round(cssW * scale)), h = Math.max(1, Math.round(cssH * scale));
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
+    if (this.bgW !== w || this.bgH !== h) {
+      if (this.bgTex) { gl.deleteTexture(this.bgTex); gl.deleteFramebuffer(this.bgFbo); }
+      this.bgW = w; this.bgH = h;
+      this.bgTex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this.bgTex);
+      gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, w, h);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.bgFbo = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.bgFbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.bgTex, 0);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      this.bgKey = '';
+    }
     const fw = Math.max(16, Math.round(cssW * fieldScale)), fh = Math.max(16, Math.round(cssH * fieldScale));
     if (fw !== this.fw || fh !== this.fh) {
       if (this.fbo) { gl.deleteFramebuffer(this.fbo); gl.deleteTexture(this.tex0); gl.deleteTexture(this.tex1); }
@@ -333,6 +367,21 @@ export class GLRenderer {
     gl.drawArrays(gl.POINTS, 0, n);
     gl.bindTexture(gl.TEXTURE_2D, this.tex0); gl.generateMipmap(gl.TEXTURE_2D);
     gl.bindTexture(gl.TEXTURE_2D, this.tex1); gl.generateMipmap(gl.TEXTURE_2D);
+    // ---- background (cached; only redrawn when camera/world/theme change)
+    const th0 = st.theme;
+    const key = cam.join(',') + '|' + f.W + ',' + f.H + '|' + th0.id;
+    if (key !== this.bgKey) {
+      this.bgKey = key;
+      gl.disable(gl.BLEND);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.bgFbo);
+      gl.viewport(0, 0, this.bgW, this.bgH);
+      const b = this.bgp;
+      gl.useProgram(b.p);
+      gl.uniform4fv(b.u.uCam, cam); gl.uniform2f(b.u.uWorld, f.W, f.H);
+      gl.uniform3fv(b.u.uBg0, th0.bg0); gl.uniform3fv(b.u.uBg1, th0.bg1); gl.uniform3fv(b.u.uGlowC, th0.glowC);
+      gl.bindVertexArray(this.emptyVao);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
     // ---- shade pass
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -341,6 +390,7 @@ export class GLRenderer {
     gl.useProgram(s.p);
     gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, this.tex0); gl.uniform1i(u.uField, 0);
     gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, this.tex1); gl.uniform1i(u.uVel, 1);
+    gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, this.bgTex); gl.uniform1i(u.uBgTex, 2);
     gl.activeTexture(gl.TEXTURE0);
     gl.uniform2f(u.uTexel, 1 / this.fw, 1 / this.fh);
     gl.uniform2f(u.uRes, this.cssW, this.cssH);

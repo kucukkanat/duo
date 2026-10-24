@@ -297,3 +297,61 @@ html[data-crease="horizontal"] .paper .tip, html[data-crease="horizontal"] .pape
 html[data-crease="horizontal"] .paper .actions { grid-area: c; align-content: start; }
 html[data-crease="horizontal"] .twin-live figure, html[data-crease="horizontal"] .twin { flex: 0 1 auto; height: 100%; aspect-ratio: 4 / 5; }
 html[data-crease="horizontal"] .twin-live figcaption, html[data-crease="horizontal"] .twin figcaption { font-size: 52px !important; }
+
+/* ---------- primary open layout: landscape book spread (890×626), vertical spine ---------- */
+html[data-crease="vertical"] body:not([data-mode="cover"]) .cam-page { padding-right: 30px; }
+html[data-crease="vertical"] body:not([data-mode="cover"]) .paper { padding-left: 30px; }
+html[data-crease="vertical"] body:not([data-mode="cover"]) .strip-page { padding-right: 34px; justify-content: space-between; }
+.print-card { display: none; }
+html[data-crease="vertical"] .print-card { display: flex; flex-direction: column; gap: 10px; align-self: center; max-width: 46%;
+  padding: 0 0 0 calc(var(--safe-l) + 18px); color: #fbe9d3; }
+.print-card small { font: 500 10px/1.3 var(--f-mono); letter-spacing: .18em; text-transform: uppercase; color: var(--brass-l); }
+.print-card strong { font: 400 clamp(56px, 11vw, 104px)/.86 var(--f-cond); letter-spacing: .01em; color: #fff4d6;
+  text-shadow: 0 0 22px rgba(255,170,80,.35), 0 3px 0 rgba(0,0,0,.35); }
+.print-card .print-meta { font: 500 11px/1.4 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: #f0cfa8; }
+.print-card em { font: italic 500 17px/1.25 var(--f-serif); color: #ffd9c2; }
+.print-card .print-rule { display: block; width: 64px; height: 2px; background: var(--brass-grad); }
+body.developing .print-card em { animation: twinkle 1.2s ease-in-out infinite; }
+@container (max-width: 330px) { .print-card { display: none !important; } }
+.strip-page { container-type: inline-size; }
+
+@media (min-aspect-ratio: 1/1) {
+  html[data-crease="vertical"] .twin-live, html[data-crease="vertical"] .twins { flex-direction: row; align-items: center; gap: 12px; padding: 22px 0 18px; }
+  html[data-crease="vertical"] .twin-live figure, html[data-crease="vertical"] .twin { flex: 1 1 0; height: auto; max-height: 100%; aspect-ratio: 3 / 4; overflow: visible; }
+  html[data-crease="vertical"] .twin-live figure:last-child, html[data-crease="vertical"] .twin:last-child { transform: translateY(14px); }
+  html[data-crease="vertical"] .twin-live figure:first-child figcaption, html[data-crease="vertical"] .twin:first-child figcaption { top: -.5em; bottom: auto; left: -6px; }
+  html[data-crease="vertical"] .twin-live figure:last-child figcaption, html[data-crease="vertical"] .twin:last-child figcaption { top: auto; bottom: -.42em; right: -6px; }
+  html[data-crease="vertical"] body:not([data-mode="cover"]) .twin-live figcaption,
+  html[data-crease="vertical"] body:not([data-mode="cover"]) .twin figcaption { font-size: clamp(40px, 7.4vw, 76px); }
+  html[data-crease="vertical"] .actions { flex-wrap: nowrap; }
+  html[data-crease="vertical"] .btn.brass { flex: 1.6 1 0; font-size: 15px; }
+  html[data-crease="vertical"] .btn.ghost { flex: 1 1 0; padding-left: 6px; padding-right: 6px; }
+  html[data-crease="vertical"] .reveal-page .question, html[data-crease="vertical"] .twin-page .question { font-size: clamp(20px, 3.2vw, 30px); }
+}
+@media (min-aspect-ratio: 1/1) {
+  html[data-crease="vertical"] .twin-live figure:first-child figcaption, html[data-crease="vertical"] .twin:first-child figcaption { color: var(--ink); text-shadow: none; }
+}
+.print-card small { white-space: nowrap; }
+
+/* horizontal-crease fixes: keep both halves inside the viewport */
+html[data-crease="horizontal"] body[data-mode="live"] .cam-page { grid-template-columns: minmax(0, 1fr) minmax(150px, 38%); }
+html[data-crease="horizontal"] body[data-mode="live"] .twin-page,
+html[data-crease="horizontal"] body[data-mode="reveal"] .reveal-page { grid-template-columns: minmax(0, 1fr) minmax(140px, 36%); padding-left: calc(var(--safe-l) + 16px); }
+html[data-crease="horizontal"] .twin-live figure, html[data-crease="horizontal"] .twin { flex: 1 1 0; min-width: 0; height: 100%; aspect-ratio: auto; }
+html[data-crease="horizontal"] .twin-live, html[data-crease="horizontal"] .twins { min-width: 0; min-height: 0; }
+html[data-crease="horizontal"] .twin-live figcaption, html[data-crease="horizontal"] .twin figcaption { font-size: clamp(28px, 7vw, 52px) !important; }
+html[data-crease="horizontal"] .twin-live figure:first-child figcaption, html[data-crease="horizontal"] .twin:first-child figcaption { left: -2px; bottom: -4px; top: auto; }
+html[data-crease="horizontal"] .twin-live figure:last-child figcaption, html[data-crease="horizontal"] .twin:last-child figcaption { right: -2px; top: -2px; bottom: auto; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .styles { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .styles button { justify-content: center; padding: 6px 0; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .styles button span { display: none; }
+html[data-crease="horizontal"] .paper .actions { flex-direction: column; flex-wrap: nowrap; }
+html[data-crease="horizontal"] .paper .btn { flex: none; padding: 10px 8px; font-size: 13px; }
+html[data-crease="horizontal"] .paper .btn.brass { font-size: 15px; }
+html[data-crease="horizontal"] .paper .question { font-size: clamp(18px, 4vw, 26px); }
+html[data-crease="horizontal"] .kicker { min-width: 0; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .deck { grid-template-columns: auto auto; grid-template-rows: auto auto; justify-content: center; align-content: center; gap: 10px 12px; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .deck .shutter { grid-column: 1 / -1; justify-self: center; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .deck .thumb { grid-row: 2; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .deck .bulbs { grid-row: 2; grid-template-columns: repeat(4, 10px); gap: 5px; padding: 6px; align-self: center; }
+html[data-crease="horizontal"] body:not([data-mode="cover"]) .deck .bulbs i { width: 10px; height: 10px; }

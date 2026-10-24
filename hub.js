@@ -18,13 +18,14 @@ function layout() {
   root.classList.toggle('desk', desk);
   if (desk) {
     const open = fold.state.open;
-    const W = open ? 626 : 466, H = open ? 890 : 678;
+    const W = open ? 890 : 466, H = open ? 626 : 678;
     const k = Math.min(1, (innerHeight - 120) / H, (innerWidth - 48) / W);
     stage.style.setProperty('--k', k.toFixed(4));
   }
-  const s = fold.state;
-  stage.dataset.dir = !desk && s.open && innerWidth > innerHeight ? 'h' : 'v';
+  stage.dataset.dir = dirOf();
 }
+// Vertical spine when the page is landscape (the real open pose, ≈890×626); horizontal crease when portrait.
+const dirOf = () => (stage.clientWidth >= stage.clientHeight ? 'v' : 'h');
 addEventListener('resize', layout);
 
 /* ───────── Unfold counter ───────── */
@@ -70,23 +71,29 @@ function fwip(open = true) {
   }
 }
 
-/* ───────── 3D doors ───────── */
+/* ───────── 3D doors ─────────
+   axis 'v': the cover splits down a vertical spine, left/right doors hinge on the outer edges.
+   axis 'h': horizontal crease, top/bottom doors. */
 let doors = null;
 function clearDoors() { doors?.wrap.remove(); doors = null; }
-function buildDoors() {
+function buildDoors(axis = dirOf()) {
   clearDoors();
-  const W = stage.clientWidth;
+  const W = stage.clientWidth, H = stage.clientHeight;
   const wrap = document.createElement('div');
-  wrap.className = 'doors'; wrap.setAttribute('aria-hidden', 'true');
-  const out = { wrap };
-  for (const side of ['l', 'r']) {
+  wrap.className = 'doors ' + axis; wrap.setAttribute('aria-hidden', 'true');
+  const out = { wrap, axis };
+  for (const side of ['a', 'b']) {
     const cast = document.createElement('div'); cast.className = 'cast ' + side;
     const door = document.createElement('div'); door.className = 'door ' + side;
     const front = document.createElement('div'); front.className = 'face front';
     const clone = cover.cloneNode(true);
     clone.removeAttribute('id'); $$('[id]', clone).forEach(n => n.removeAttribute('id'));
     clone.classList.add('clone'); clone.inert = true;
-    clone.style.width = W + 'px'; clone.style.left = side === 'l' ? '0' : -W / 2 + 'px';
+    Object.assign(clone.style, {
+      width: W + 'px', height: H + 'px',
+      left: axis === 'v' && side === 'b' ? -W / 2 + 'px' : '0',
+      top: axis === 'h' && side === 'b' ? -H / 2 + 'px' : '0',
+    });
     const shade = document.createElement('div'); shade.className = 'shade';
     front.append(clone, shade);
     const back = document.createElement('div'); back.className = 'face back';
@@ -99,19 +106,26 @@ function buildDoors() {
   doors = out;
   return out;
 }
-function setDoorAngle(a) { // a in degrees, 0 = closed, positive = open
-  if (!doors) buildDoors();
-  doors.l.door.style.transform = `rotateY(${-a}deg)`;
-  doors.r.door.style.transform = `rotateY(${a}deg)`;
+// Transform for door `side` opened by `a` degrees (0 = shut). Both swing toward the viewer.
+function rot(axis, side, a) {
+  if (axis === 'v') return `rotateY(${side === 'a' ? -a : a}deg)`;
+  return `rotateX(${side === 'a' ? a : -a}deg)`;
+}
+function setDoorAngle(a) {
+  if (!doors) buildDoors('v');
+  const { axis } = doors;
+  doors.a.door.style.transform = rot(axis, 'a', a);
+  doors.b.door.style.transform = rot(axis, 'b', a);
   const s = Math.min(1, a / 90);
-  doors.l.shade.style.opacity = doors.r.shade.style.opacity = (s * 0.5).toFixed(3);
-  doors.l.cast.style.opacity = doors.r.cast.style.opacity = (0.85 * (1 - s * 0.6)).toFixed(3);
+  doors.a.shade.style.opacity = doors.b.shade.style.opacity = (s * 0.5).toFixed(3);
+  doors.a.cast.style.opacity = doors.b.cast.style.opacity = (0.85 * (1 - s * 0.6)).toFixed(3);
 }
 
 let anims = [];
 function stopAnims() { anims.forEach(a => a.cancel()); anims = []; }
 const run = (el, kf, opt) => { const a = el.animate(kf, { fill: 'forwards', ...opt }); anims.push(a); return a; };
 
+let lastAxis = 'v';
 function playOpen(from = 0) {
   stopAnims();
   root.classList.remove('peek', 'revealing');
@@ -121,23 +135,28 @@ function playOpen(from = 0) {
     run(spread, [{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: 'none' });
     return;
   }
-  const d = buildDoors();
+  // A drag always pulls left/right from the spine; otherwise follow the open layout's crease.
+  const axis = from ? 'v' : dirOf();
+  lastAxis = dirOf();
+  const d = buildDoors(axis);
   const p = from / 168, dur = 1400 * (1 - p * 0.4), delay = from ? 0 : 80;
   const ease = from ? 'cubic-bezier(.25,.6,.2,1)' : 'cubic-bezier(.5,.05,.2,1)';
   void spread.offsetWidth;
   root.classList.add('revealing');
-  run(d.l.door, [{ transform: `rotateY(${-from}deg)` }, { transform: 'rotateY(-168deg)' }], { duration: dur, delay, easing: ease });
-  run(d.r.door, [{ transform: `rotateY(${from}deg)` }, { transform: 'rotateY(168deg)' }], { duration: dur, delay, easing: ease });
-  for (const side of [d.l, d.r]) {
+  for (const k of ['a', 'b']) {
+    const side = d[k];
+    run(side.door, [{ transform: rot(axis, k, from) }, { transform: rot(axis, k, 168) }], { duration: dur, delay, easing: ease });
     run(side.shade, [{ opacity: Math.min(.5, p) }, { opacity: .55, offset: .45 }, { opacity: .25 }], { duration: dur, delay, easing: ease });
-    run(side.cast, [{ opacity: .85 * (1 - p), transform: 'translateX(0)' }, { opacity: 0, transform: `translateX(${side === d.l ? -45 : 45}%)` }], { duration: dur * 0.75, delay: delay + 40, easing: 'ease-out' });
+    const off = (k === 'a' ? -45 : 45) + '%';
+    const tr = axis === 'v' ? `translateX(${off})` : `translateY(${off})`;
+    run(side.cast, [{ opacity: .85 * (1 - p), transform: 'none' }, { opacity: 0, transform: tr }], { duration: dur * 0.75, delay: delay + 40, easing: 'ease-out' });
   }
   run(d.wrap, [{ opacity: 1 }, { opacity: 1, offset: .78 }, { opacity: 0 }], { duration: dur + delay, easing: 'linear' });
   run(spread, [{ filter: 'brightness(.45)', transform: 'scale(.965)' }, { filter: 'brightness(1)', transform: 'none' }], { duration: 900, delay: 120, easing: 'cubic-bezier(.2,.7,.2,1)', fill: 'none' });
   const burst = $('.burst', spread);
-  run(burst, [{ opacity: 0, transform: 'translateX(-50%) scaleX(.2)' }, { opacity: 1, transform: 'translateX(-50%) scaleX(1)', offset: .25 }, { opacity: 0, transform: 'translateX(-50%) scaleX(2.2)' }], { duration: 900, easing: 'ease-out', fill: 'none' });
-  const done = anims[0].finished;
-  done.then(() => { clearDoors(); stopAnims(); }).catch(() => {});
+  const [T, S] = lastAxis === 'v' ? ['translateX(-50%)', 'scaleX'] : ['translateY(-50%)', 'scaleY'];
+  run(burst, [{ opacity: 0, transform: `${T} ${S}(.2)` }, { opacity: 1, transform: `${T} ${S}(1)`, offset: .25 }, { opacity: 0, transform: `${T} ${S}(2.2)` }], { duration: 900, easing: 'ease-out', fill: 'none' });
+  anims[0].finished.then(() => { clearDoors(); stopAnims(); }).catch(() => {});
   setTimeout(() => root.classList.remove('revealing'), 2000);
 }
 
@@ -147,14 +166,14 @@ function playClose() {
   haptic(); fwip(false);
   if (reduceMQ.matches) { clearDoors(); return; }
   root.classList.add('peek');
-  const d = buildDoors();
+  const axis = lastAxis;
+  const d = buildDoors(axis);
   const dur = 640, ease = 'cubic-bezier(.55,0,.85,.35)';
   setDoorAngle(150);
-  run(d.l.door, [{ transform: 'rotateY(-150deg)' }, { transform: 'rotateY(0deg)' }], { duration: dur, easing: ease });
-  run(d.r.door, [{ transform: 'rotateY(150deg)' }, { transform: 'rotateY(0deg)' }], { duration: dur, easing: ease });
-  for (const side of [d.l, d.r]) {
-    run(side.shade, [{ opacity: .5 }, { opacity: 0 }], { duration: dur, easing: ease });
-    run(side.cast, [{ opacity: 0 }, { opacity: .85 }], { duration: dur, easing: ease });
+  for (const k of ['a', 'b']) {
+    run(d[k].door, [{ transform: rot(axis, k, 150) }, { transform: rot(axis, k, 0) }], { duration: dur, easing: ease });
+    run(d[k].shade, [{ opacity: .5 }, { opacity: 0 }], { duration: dur, easing: ease });
+    run(d[k].cast, [{ opacity: 0 }, { opacity: .85 }], { duration: dur, easing: ease });
   }
   run(spread, [{ filter: 'brightness(1)' }, { filter: 'brightness(.4)' }], { duration: dur, easing: ease, fill: 'none' });
   anims[0].finished.then(() => {
@@ -217,7 +236,7 @@ cover.addEventListener('pointermove', e => {
     try { cover.setPointerCapture(e.pointerId); } catch {}
     stopAnims();
     root.classList.add('peek');
-    buildDoors();
+    buildDoors('v');
     haptic();
   }
   const scale = (stage.getBoundingClientRect().width || 1) / stage.clientWidth;
@@ -236,8 +255,8 @@ function endDrag() {
   const from = d.a;
   stopAnims();
   const ease = 'cubic-bezier(.3,1.5,.5,1)';
-  run(doors.l.door, [{ transform: `rotateY(${-from}deg)` }, { transform: 'rotateY(0)' }], { duration: 420, easing: ease });
-  run(doors.r.door, [{ transform: `rotateY(${from}deg)` }, { transform: 'rotateY(0)' }], { duration: 420, easing: ease })
+  run(doors.a.door, [{ transform: rot('v', 'a', from) }, { transform: rot('v', 'a', 0) }], { duration: 420, easing: ease });
+  run(doors.b.door, [{ transform: rot('v', 'b', from) }, { transform: rot('v', 'b', 0) }], { duration: 420, easing: ease })
     .finished.then(() => { clearDoors(); stopAnims(); root.classList.remove('peek'); }).catch(() => {});
 }
 cover.addEventListener('pointerup', endDrag);

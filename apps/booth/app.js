@@ -472,6 +472,7 @@ async function finishStrip(frames, axis) {
   const blob = await toBlob(canvas);
   if (state.strip?.url) URL.revokeObjectURL(state.strip.url);
   const url = URL.createObjectURL(blob);
+  state.prints = (state.prints || 0) + 1;
   state.strip = { frames, style: state.style, axis, canvas, blob, url, developed: false, dismissed: false, pick: null };
   const thumb = $('#thumb');
   thumb.querySelector('img').src = url; thumb.disabled = false;
@@ -526,6 +527,14 @@ async function enterReveal(develop) {
   drawTwins(s.frames[0], s.axis, twinL, twinR);
   document.querySelectorAll('.twin').forEach(t => t.classList.toggle('picked', t.dataset.twin === s.pick));
   const v = vertical(), m = M();
+  $('#printMeta').textContent = `${STYLE_NAMES[s.style]} · ${dateStamp()}`;
+  $('#printNo').textContent = String(state.prints || 1);
+  const status = $('#printStatus');
+  if (develop) {
+    status.textContent = 'developing… hold by the edges';
+    body.classList.add('developing');
+    setTimeout(() => { if (token === revealToken) { status.textContent = 'dry & ready. Meet your twins →'; body.classList.remove('developing'); } }, 4200 * m);
+  } else { status.textContent = 'dry & ready. Meet your twins →'; body.classList.remove('developing'); }
   const wrap = $('#stripWrap'), img = $('#stripImg'), curl = $('#stripCurl');
   const actions = $('#revealPage .actions'), question = $('#revealPage .question');
   [wrap, img, curl, actions, question, ...document.querySelectorAll('.twin, .gloss')].forEach(e => e.getAnimations().forEach(a => a.cancel()));

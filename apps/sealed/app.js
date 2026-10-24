@@ -87,6 +87,7 @@ class Sealed {
     this.applyTheme();
     this.buildCard();
     this.buildEnv();
+    this.updateLayout();
     this.showEnvInstant();
     this.loop = this.loop.bind(this);
     requestAnimationFrame(this.loop);
@@ -110,14 +111,19 @@ class Sealed {
     wall.append(h('div', 'tex'), h('div', 'deco'));
     floor.append(h('div', 'tex'));
     this.headline = h('h1', 'headline');
-    wall.append(this.headline);
     const note = h('div', 'note');
     this.msg = h('p', 'msg');
     this.sig = h('p', 'sig');
     note.append(this.msg, this.sig);
     this.hint = h('p', 'hint');
     this.cta = h('div', 'cta');
-    this.card.append(wall, floor, h('div', 'crease'), scene, note, this.hint, this.cta);
+    // Right page (landscape spread) + text layer share one box so they swing open together like a book page.
+    const rp = h('div', 'rp');
+    this.mono = h('div', 'rp-mono');
+    rp.append(h('div', 'tex'), h('div', 'rp-frame'), this.mono, h('div', 'rp-cover'));
+    const txt = h('div', 'txt');
+    txt.append(note, this.hint, this.cta);
+    this.card.append(wall, floor, h('div', 'crease'), scene, this.headline, rp, h('div', 'spine'), txt);
     this.scene = scene;
     this.buildLayers();
     this.setText(d);
@@ -170,6 +176,7 @@ class Sealed {
     mk(this.headline, headlineOf(d), 'ch');
     mk(this.msg, messageOf(d), 'ch');
     this.sig.textContent = d.f.trim() ? '— ' + d.f.trim() : '';
+    this.mono.textContent = letterOf(d);
     if (this.textShown) this.showTextInstant();
   }
 
@@ -244,6 +251,8 @@ class Sealed {
         <div class="address"><span class="for">For you</span><span class="from"></span></div>
       </div>
       <div class="flap"><div class="face out"><div class="tex"></div></div><div class="face in"></div></div>
+      <div class="door l"><div class="face out"><div class="tex"></div></div><div class="face in"></div></div>
+      <div class="door r"><div class="face out"><div class="tex"></div></div><div class="face in"></div></div>
       <div class="seal-host"><div class="halo"></div><div class="seal-shadow"></div><div class="seal"></div></div>`;
     wrap.append(env);
     const ui = h('div', 'cover-ui');
@@ -252,6 +261,8 @@ class Sealed {
     this.cover.append(desk, wrap, ui);
     this.env = env; this.wrap = wrap; this.desk = desk; this.ui = ui;
     this.flap = env.querySelector('.flap');
+    this.doorL = env.querySelector('.door.l');
+    this.doorR = env.querySelector('.door.r');
     this.sealHost = env.querySelector('.seal-host');
     env.querySelector('.from').textContent = d.f.trim() ? 'from ' + d.f.trim() : '';
     this.buildSeal();
@@ -265,6 +276,23 @@ class Sealed {
     this.flapA = a;
     this.flap.style.transform = `rotateX(${a.toFixed(2)}deg)`;
     this.flap.classList.toggle('flipped', a > 90);
+    // Landscape: a gatefold that opens along the spine like a book.
+    this.doorL.style.transform = `rotateY(${(-a).toFixed(2)}deg)`;
+    this.doorR.style.transform = `rotateY(${a.toFixed(2)}deg)`;
+    this.doorL.classList.toggle('flipped', a > 90);
+    this.doorR.classList.toggle('flipped', a > 90);
+  }
+  /** Right page angle in the landscape spread: -178 = closed over the left page, 0 = open flat. */
+  setPage(a) {
+    this.card.style.setProperty('--pg', a.toFixed(2) + 'deg');
+    this.card.classList.toggle('pg-back', a < -90);
+  }
+  updateLayout() {
+    const r = this.root.getBoundingClientRect();
+    const spread = this.full && r.width >= r.height;
+    this.root.classList.toggle('spread', spread);
+    this.spread = spread;
+    this.unit = 0;
   }
 
   showEnvInstant() {
@@ -288,6 +316,7 @@ class Sealed {
     this.cover.style.display = 'none';
     this.card.style.visibility = '';
     this.layers.forEach(L => { L.p = 1; L.v = 0; L.target = 1; L.popped = true; });
+    this.setPage(0);
     this.showTextInstant();
   }
 
@@ -337,7 +366,8 @@ class Sealed {
   }
   measureU() {
     const r = this.root.getBoundingClientRect();
-    return Math.min(r.width / 100, r.height * .0062) || 4;
+    if (this.spread) return Math.min(r.width / 200, r.height * .0072) || 4;
+    return Math.min(r.width / 100, r.height * (this.full ? .0056 : .0062)) || 4;
   }
 
   sealCenter() {
@@ -354,7 +384,9 @@ class Sealed {
     tilt.tx = tilt.ty = 0;
     this.env.style.transition = 'transform .25s';
     this.env.style.transform = '';
+    this.updateLayout();
     this.unit = this.measureU();
+    this.setPage(this.spread && !reduced ? -178 : 0);
     this.card.style.visibility = '';
     this.layers.forEach(L => { L.p = 0; L.v = 0; L.target = 0; });
     this.hideText();
@@ -379,7 +411,14 @@ class Sealed {
     if (this.full) document.documentElement.classList.toggle('light-ui', !this.root.classList.contains('dark'));
     await wait(300);
     if (run !== this.run) return;
-    // ~1000ms — pop-ups rise from the crease
+    if (this.spread && !reduced) {
+      // ~1000ms — the card itself opens like a book: the right page sweeps across the spine.
+      sfx.paper(.7);
+      tween(950, e => this.setPage(-178 * (1 - e)), easeInOut);
+      await wait(380);
+      if (run !== this.run) return;
+    }
+    // pop-ups rise from the crease
     this.rise();
     sfx.paper(.45);
     await wait(650);
@@ -405,7 +444,8 @@ class Sealed {
     this.setHint('');
     this.flatten();
     sfx.paper(.4); haptic();
-    await wait(560);
+    await wait(this.spread ? 300 : 560);
+    if (this.spread && !reduced && run === this.run) await tween(650, e => this.setPage(-178 * e), easeInOut);
     if (run !== this.run) return;
     this.hideText();
     this.card.classList.remove('text-fade');
@@ -611,10 +651,9 @@ async function recipient(data) {
   card.ui.querySelector('.make').addEventListener('click', () => haptic());
 
   fold.on((s, prev, kind) => {
-    if (kind === 'init') return;
     again.hidden = s.physical;
-    if (kind !== 'fold') { card.unit = 0; return; }
-    card.unit = 0;
+    card.updateLayout();
+    if (kind !== 'fold') return;
     if (s.open && !prev?.open) wantOpen = true;
     else if (!s.open && prev?.open) wantOpen = false;
     setPrompt();

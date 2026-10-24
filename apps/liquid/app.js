@@ -83,7 +83,7 @@ let simT = 0;                 // simulation clock (ms); transitions run on it so
 let shake = 0;
 let gOverride = null;        // {x,y,w}
 
-function axisFor(state) { return state.physical && state.crease === 'horizontal' ? 1 : 0; }
+function axisFor(state) { return state.crease === 'horizontal' ? 1 : 0; }
 function setWall(axis, W, H, gapHalf) {
   Object.assign(F.wall, { on: true, axis, pos: axis ? H / 2 : W / 2, gapC: axis ? W / 2 : H / 2, gapHalf, thick: 3.5 });
 }
@@ -271,7 +271,7 @@ function onResize() {
   const kx = nW / W, ky = nH / H;
   for (let i = 0; i < F.n; i++) { F.x[i] *= kx; F.y[i] *= ky; F.px[i] = F.x[i]; F.py[i] = F.y[i]; }
   W = nW; H = nH; F.W = W; F.H = H; st.cam = [0, 0, W, H];
-  if (F.wall.on) { F.wall.pos = F.wall.axis ? H / 2 : W / 2; F.wall.gapC = F.wall.axis ? W / 2 : H / 2; }
+  if (F.wall.on) { F.wall.axis = axisFor(fold.state); F.wall.pos = F.wall.axis ? H / 2 : W / 2; F.wall.gapC = F.wall.axis ? W / 2 : H / 2; }
   sizeCanvas();
 }
 
@@ -487,6 +487,7 @@ function composite() {
 }
 
 // ---------------------------------------------------------------- main loop + adaptive quality
+let emaSim = 3;
 let last = performance.now(), acc = 0, emaDelta = 16.7, emaWork = 4, lastAdapt = performance.now() + 2500;
 const SUB = 1000 / 120;
 let paused = false;
@@ -496,9 +497,9 @@ function frame(now) {
   requestAnimationFrame(frame);
   let dt = now - last; last = now;
   if (paused) return;
-  if (dt > 100) dt = SUB * 2;
+  emaDelta += (Math.min(dt, 250) - emaDelta) * 0.05;
+  if (dt > 100) dt = SUB * 3;
   const t0 = performance.now();
-  emaDelta += (dt - emaDelta) * 0.05;
   st.time = now / 1000;
 
   updateTransition(simT);
@@ -515,7 +516,9 @@ function frame(now) {
   let steps = Math.min(3, Math.floor(acc / SUB));
   acc -= steps * SUB; if (acc > SUB * 2) acc = 0;
   F.crossings = 0;
+  const ts = performance.now();
   for (let s = 0; s < steps; s++) F.step(gx, gy, ptr);
+  if (steps) emaSim += ((performance.now() - ts) / steps * 2 - emaSim) * 0.1;
   simT += steps * SUB;
   if (ptr.active) { ptr.vx *= 0.85; ptr.vy *= 0.85; }
   if (sfx && F.wall.on && mode !== 'folding') sfx.flow(F.crossings / Math.max(1, steps) * 0.5);
@@ -547,18 +550,16 @@ function frame(now) {
 
 function adapt(now) {
   if (NOADAPT || now - lastAdapt < 1400 || mode === 'unfolding' || mode === 'folding') return;
-  if (emaDelta > 20 || emaWork > 14) {
-    lastAdapt = now;
-    if (F.n > budget * 0.55 && F.n > 900) {
-      F.thin(0.12); budget = Math.max(900, Math.round(F.n));
-    } else if (renderQ > 0.6) {
-      renderQ = renderQ > 0.8 ? 0.75 : 0.6; sizeCanvas();
-    } else if (F.n > 700) { F.thin(0.1); budget = F.n; }
-  }
+  if (emaDelta <= 20 && emaSim <= 9) return;
+  lastAdapt = now;
+  const cpuBound = emaSim > 9 || emaWork > emaDelta * 0.6;
+  if (cpuBound && F.n > 900) { F.thin(0.12); budget = Math.max(900, F.n); }
+  else if (renderQ > 0.5) { renderQ = renderQ > 0.8 ? 0.75 : renderQ > 0.65 ? 0.6 : 0.5; sizeCanvas(); }
+  else if (F.n > 700) { F.thin(0.1); budget = F.n; }
 }
 
 window.__liquid = {
-  get n() { return F.n; }, get emaDelta() { return emaDelta; }, get emaWork() { return emaWork; },
+  get n() { return F.n; }, get emaDelta() { return emaDelta; }, get emaWork() { return emaWork; }, get emaSim() { return emaSim; },
   get mode() { return mode; }, get budget() { return budget; }, get renderQ() { return renderQ; },
   get gl() { return isGL; }, get simT() { return simT; }, get h() { return h; }, F, st,
   setGravity(a) { gAngle = a; },

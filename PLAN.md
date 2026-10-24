@@ -5,7 +5,7 @@ A PWA showcase of 4 mini apps for **iPhone Duo**, Apple's passport-style foldabl
 ## How we got here (3 iterations)
 
 **1. Research** (3 parallel agents)
-- **The device.** The cover screen is 5.4" (about 466×678 CSS px) and the inner screen is 7.6" (about 626×890), with nearly the same aspect ratio.
+- **The device.** The cover screen is 5.4" and portrait, about 466×678 CSS px. The inner screen is 7.6" and landscape, about 890×626: it opens like a book, so the crease is a vertical spine at x = width/2. Unfolding is simply a resize from 466×678 to 890×626.
 - **What Safari tells a page.** It exposes the fold *only as a viewport resize*. There are no Viewport Segments, no Device Posture API and no hinge angle.
 - **What works in a tab or installed app.** WebGPU (on by default), camera and mic, motion sensors, Web Audio, Web Share with files, MediaRecorder and Wake Lock.
 - **What doesn't.** There is no Vibration API, so haptics use the `<input switch>` trick. rAF is capped at about 60fps. Each sensor needs a tap first.
