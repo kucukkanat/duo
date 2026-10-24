@@ -275,6 +275,7 @@ export class GLRenderer {
     this.spark = program(gl, SPARK_VS, SPARK_FS);
     this.bgp = program(gl, QUAD_VS, BG_FS);
     this.bgKey = '';
+    this.prof = /[?&]prof/.test(location.search) ? {} : null;
     this.vao = gl.createVertexArray();
     this.buf = gl.createBuffer();
     gl.bindVertexArray(this.vao);
@@ -364,9 +365,13 @@ export class GLRenderer {
     gl.bindVertexArray(this.vao);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buf);
     gl.bufferData(gl.ARRAY_BUFFER, d.subarray(0, n * 6), gl.STREAM_DRAW);
+    const P = this.prof ? (k) => { gl.finish(); const t = performance.now(); this.prof[k] = (this.prof[k] || 0) * 0.9 + (t - this.pt) * 0.1; this.pt = t; } : null;
+    if (P) { gl.finish(); this.pt = performance.now(); }
     gl.drawArrays(gl.POINTS, 0, n);
+    P && P('splat');
     gl.bindTexture(gl.TEXTURE_2D, this.tex0); gl.generateMipmap(gl.TEXTURE_2D);
     gl.bindTexture(gl.TEXTURE_2D, this.tex1); gl.generateMipmap(gl.TEXTURE_2D);
+    P && P('mip');
     // ---- background (cached; only redrawn when camera/world/theme change)
     const th0 = st.theme;
     const key = cam.join(',') + '|' + f.W + ',' + f.H + '|' + th0.id;
@@ -382,6 +387,7 @@ export class GLRenderer {
       gl.bindVertexArray(this.emptyVao);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
+    P && P('bg');
     // ---- shade pass
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -408,6 +414,7 @@ export class GLRenderer {
     gl.uniform4f(u.uMat, th.glow, th.iri, th.metal, th.crust);
     gl.bindVertexArray(this.emptyVao);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+    P && P('shade');
     // ---- sparks
     const sn = sparks.n;
     if (sn) {

@@ -561,7 +561,7 @@ function adapt(now) {
 window.__liquid = {
   get n() { return F.n; }, get emaDelta() { return emaDelta; }, get emaWork() { return emaWork; }, get emaSim() { return emaSim; },
   get mode() { return mode; }, get budget() { return budget; }, get renderQ() { return renderQ; },
-  get gl() { return isGL; }, get simT() { return simT; }, get h() { return h; }, F, st,
+  get gl() { return isGL; }, get prof() { return R.prof; }, get simT() { return simT; }, get h() { return h; }, F, st,
   setGravity(a) { gAngle = a; },
 };
 
