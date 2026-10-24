@@ -70,3 +70,8 @@ body.has-tilt #puck { display: none; }
 
 @media (max-width: 380px) { .chip { padding: 5px; } .chip i { width: 20px; height: 20px; } #rec { padding: 0 12px 0 10px; } }
 @media (prefers-reduced-motion: reduce) { #pourBtn, #rec[data-state="ready"], #hint b { animation: none; } }
+
+/* Open, book-style spread (vertical spine): keep UI off the crease */
+html[data-fold="open"][data-crease="vertical"] #pour { left: 25%; top: 42%; }
+html[data-fold="open"][data-crease="vertical"] #recbadge { left: 25%; }
+html[data-fold="open"][data-crease="horizontal"] #pour { top: 24%; }
